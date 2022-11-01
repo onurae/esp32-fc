@@ -1,0 +1,16 @@
+{
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "files.associations": {
+    "cstdlib": "cpp",
+    "cstdint": "cpp",
+    "random": "cpp",
+    "cmath": "cpp",
+    "complex": "cpp",
+    "array": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "chrono": "cpp"
+  },
+  "idf.portWin": "COM8",
+  "idf.adapterTargetName": "esp32"
+}
