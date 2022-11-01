@@ -16,6 +16,7 @@
 #define AHRS_HPP
 
 #include "i2c.hpp"
+#include "util.hpp"
 #include <cmath>
 
 class Ahrs
@@ -138,7 +139,6 @@ public:
     void PrintMagCalibrated();
     void PrintAccGyroBias();
     void PrintMagBiasScale();
-    void PrintCountDown(uint8_t sec);
     void PrintQuaternions();
     void PrintEulerAngles();
 };

@@ -200,8 +200,7 @@ void Ahrs::CalibrateAccGyro()
     printf("%s", "\nAccelerometer and gyroscope calibration\n");
     printf("%s", "The sensor should be on flat surface! This takes 10 seconds.\n");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
-    printf("%s", "Beginning in\n");
-    PrintCountDown(3);
+    PrintCountDown("Beginning in", 3);
     printf("%s", "Do not move the sensor!\n");
     float bias[6] = {};
     uint16_t cycle = 0;
@@ -241,8 +240,7 @@ void Ahrs::CalibrateMag()
     printf("%s", "\nMagnetometer calibration\n");
     printf("%s", "Rotate the sensor about all axes until complete! This takes 30 seconds.\n");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
-    printf("%s", "Beginning in\n");
-    PrintCountDown(3);
+    PrintCountDown("Beginning in", 3);
     printf("%s", "Start rotating!\n");
     ReadMag();
     float mMax[3] = {mxr, myr, mzr};
@@ -347,10 +345,7 @@ void Ahrs::PrintAccGyroBias()
     printf("%s%f\n", "biasGx = ", gxb);
     printf("%s%f\n", "biasGy = ", gyb);
     printf("%s%f\n", "biasGz = ", gzb);
-    while (true)
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    LoopForever();
 }
 
 void Ahrs::PrintMagBiasScale()
@@ -360,19 +355,7 @@ void Ahrs::PrintMagBiasScale()
     printf("Bias = x: %f y: %f z: %f\n", mxb, myb, mzb);
     printf("%s", "Soft iron: \n");
     printf("Scale = x: %f y: %f z: %f\n", mxs, mys, mzs);
-    while (true)
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
-void Ahrs::PrintCountDown(uint8_t sec)
-{
-    for (int i = sec; i > 0; i--)
-    {
-        printf("%d...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    LoopForever();
 }
 
 float Ahrs::DegToRad(float deg)
