@@ -51,6 +51,7 @@ bool Baro::Init()
     vTaskDelay(10 / portTICK_PERIOD_MS);
     CalculatePresTempAlt(); // Read digital pressure value, calculate pressure, temperature and altitude.
     altfp = alt;
+    altf = alt;
     PrintPresTemp();
     PrintAltVs();
     printf("MS5611 ready.\n");
