@@ -31,4 +31,4 @@ public:
     esp_err_t Read(uint8_t address, uint8_t registerAddress, uint8_t len, uint8_t *buffer);
 };
 
-#endif /* AHRS_HPP */
+#endif /* I2C_HPP */
