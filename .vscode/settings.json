@@ -11,6 +11,6 @@
     "string_view": "cpp",
     "chrono": "cpp"
   },
-  "idf.portWin": "COM8",
+  "idf.portWin": "COM3",
   "idf.adapterTargetName": "esp32"
 }

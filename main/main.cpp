@@ -13,6 +13,7 @@
 #include "esp_timer.h"
 #include "ahrs.hpp"
 #include "baro.hpp"
+#include "sbus.hpp"
 
 extern "C" void app_main(void)
 {
@@ -34,11 +35,15 @@ extern "C" void app_main(void)
     Baro baro(&i2c);
     if (!baro.Init()) // Pressure refresh rate: (freq / 2)
     {
-       printf("%s", "Baro Error!\n");
-       while (true)
-       {
-           vTaskDelay(1000 / portTICK_PERIOD_MS);
-       }
+        printf("%s", "Baro Error!\n");
+        LoopForever();
+    }
+
+    Sbus sbus;
+    if (!sbus.Init())
+    {
+        printf("%s", "Sbus Error!\n");
+        LoopForever();
     }
 
     PrintCountDown("Entering loop in", 3);
@@ -63,7 +68,7 @@ extern "C" void app_main(void)
             //LoopForever();
         }
 
-        // ahrs.Update(dt);
+         ahrs.Update(dt);
         //  ahrs.PrintAccRaw();
         //  ahrs.PrintAccCalibrated();
         //  ahrs.PrintGyroRaw();
@@ -74,7 +79,14 @@ extern "C" void app_main(void)
         //  ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        baro.Update(dt);
-        baro.PrintAltVs();
+        // baro.Update(dt);
+        // baro.PrintAltVs();
+
+        if (sbus.Read())
+        {
+            Sbus::SbusData sbusData = sbus.GetData();
+            uint16_t ch0 = sbus.GetData().ch[0];
+            sbus.PrintData();
+        }
     }
 }
