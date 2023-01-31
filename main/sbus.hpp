@@ -13,6 +13,7 @@
 
 #include "driver/uart.h"
 #include "driver/gpio.h"
+#include <algorithm>
 
 class Sbus
 {
@@ -32,6 +33,9 @@ public:
     int Write(const SbusData &txData);
     SbusData GetData();
     void PrintData();
+    float GetAnalog(uint16_t channel, float rangeMin, float rangeMax);
+    int GetSwitch2Pos(uint16_t channel);
+    int GetSwitch3Pos(uint16_t channel);
 
 private:
     uart_port_t uartPort;
@@ -45,6 +49,7 @@ private:
     SbusData rxData;
     uint8_t k = 0;
     uint8_t prevData = footer;
+    float MapRange(uint16_t value, float minOut, float maxOut, float minIn = 192.0f, float maxIn = 1792.0f);
 };
 
 #endif /* SBUS_HPP */

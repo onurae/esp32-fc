@@ -68,7 +68,7 @@ extern "C" void app_main(void)
             //LoopForever();
         }
 
-         ahrs.Update(dt);
+        // ahrs.Update(dt);
         //  ahrs.PrintAccRaw();
         //  ahrs.PrintAccCalibrated();
         //  ahrs.PrintGyroRaw();
@@ -79,14 +79,20 @@ extern "C" void app_main(void)
         //  ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        // baro.Update(dt);
-        // baro.PrintAltVs();
+        //baro.Update(dt);
+        //baro.PrintAltVs();
 
         if (sbus.Read())
         {
             Sbus::SbusData sbusData = sbus.GetData();
-            uint16_t ch0 = sbus.GetData().ch[0];
-            sbus.PrintData();
+            //sbus.PrintData();
+            uint16_t ch0_raw = sbusData.ch[0];
+            float ch0 = sbus.GetAnalog(1, -1.0f, 1.0f); // add yaw,rc deadband around zero. add filter.
+            int arm = sbus.GetSwitch2Pos(5);
+            int another = sbus.GetSwitch3Pos(6);
+            uint16_t throttle_raw = sbusData.ch[2];
+            float throttle = sbus.GetAnalog(3, 0.0f, 1.0f);
+            printf("%d %f %d %d %d %f\n", ch0_raw, ch0, arm, another, throttle_raw, throttle);
         }
     }
 }

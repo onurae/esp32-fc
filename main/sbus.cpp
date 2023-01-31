@@ -34,6 +34,7 @@ bool Sbus::Init()
     if (Read())
     {
         return true;
+        printf("SBUS ready.\n");
     }
     return false;
 }
@@ -102,10 +103,51 @@ Sbus::SbusData Sbus::GetData()
 
 void Sbus::PrintData()
 {
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
+    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
            rxData.ch[0], rxData.ch[1], rxData.ch[2], rxData.ch[3], rxData.ch[4], rxData.ch[5], rxData.ch[6], rxData.ch[7],
            rxData.ch[8], rxData.ch[9], rxData.ch[10], rxData.ch[11], rxData.ch[12], rxData.ch[13], rxData.ch[14], rxData.ch[15],
            rxData.ch17, rxData.ch18, rxData.failSafe, rxData.frameLost);
+}
+
+float Sbus::MapRange(uint16_t value, float minOut, float maxOut, float minIn, float maxIn)
+{
+    float out = (value - minIn) * (maxOut - minOut) / (maxIn - minIn) + minOut;
+    return std::min(std::max(out, minOut < maxOut ? minOut : maxOut), minOut > maxOut ? minOut : maxOut);
+}
+
+float Sbus::GetAnalog(uint16_t channel, float rangeMin, float rangeMax)
+{
+    return MapRange(rxData.ch[channel - 1], rangeMin, rangeMax);
+}
+
+int Sbus::GetSwitch2Pos(uint16_t channel)
+{
+    float m = MapRange(rxData.ch[channel - 1], 0, 1);
+    if (m > 0.5f) 
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int Sbus::GetSwitch3Pos(uint16_t channel)
+{
+    float m = MapRange(rxData.ch[channel - 1], 0, 1);
+    if (m > 0.66f)
+    {
+        return 2;
+    }
+    else if ( m > 0.33f)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int Sbus::Write(const SbusData &txData)
