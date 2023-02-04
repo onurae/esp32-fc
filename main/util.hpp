@@ -17,5 +17,6 @@
 void PrintCountDown(uint8_t sec);
 void PrintCountDown(const char* s, uint8_t sec);
 void LoopForever();
+float LinearScaledDeadband(float value, float deadbandCutoff);
 
 #endif /* UTIL_HPP */

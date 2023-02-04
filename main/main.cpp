@@ -87,7 +87,7 @@ extern "C" void app_main(void)
             Sbus::SbusData sbusData = sbus.GetData();
             //sbus.PrintData();
             uint16_t ch0_raw = sbusData.ch[0];
-            float ch0 = sbus.GetAnalog(1, -1.0f, 1.0f); // add yaw,rc deadband around zero. add filter.
+            float ch0 = sbus.GetAnalog(1, -1.0f, 1.0f);
             int arm = sbus.GetSwitch2Pos(5);
             int another = sbus.GetSwitch3Pos(6);
             uint16_t throttle_raw = sbusData.ch[2];

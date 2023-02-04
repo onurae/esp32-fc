@@ -19,7 +19,7 @@ void PrintCountDown(uint8_t sec)
     }
 }
 
-void PrintCountDown(const char* s, uint8_t sec)
+void PrintCountDown(const char *s, uint8_t sec)
 {
     printf("%s\n", s);
     PrintCountDown(sec);
@@ -30,5 +30,17 @@ void LoopForever()
     while (true)
     {
         vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
+
+float LinearScaledDeadband(float value, float deadbandCutoff)
+{
+    if (std::abs(value) <= deadbandCutoff)
+    {
+        return 0;
+    }
+    else
+    {
+        return (value - (std::abs(value) / value) * deadbandCutoff) / (1.0 - deadbandCutoff);
     }
 }
