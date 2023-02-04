@@ -13,6 +13,7 @@
 
 #include "driver/uart.h"
 #include "driver/gpio.h"
+#include "esp_timer.h"
 #include <algorithm>
 
 class Sbus
@@ -35,10 +36,7 @@ public:
     float GetAnalog(uint16_t channel, float rangeMin, float rangeMax);
     int GetSwitch2Pos(uint16_t channel);
     int GetSwitch3Pos(uint16_t channel);
-    bool GetCh17() { return rxData.ch17; }
-    bool GetCh18() { return rxData.ch18; }
-    bool GetFailSafe() { return rxData.failSafe; }
-    bool GetFrameLost() { return rxData.frameLost; }
+    bool CheckStatus(int timeout = 200); // [ms]
     void PrintData();
     void PrintTest();
 
@@ -56,6 +54,7 @@ private:
     uint8_t k = 0;
     uint8_t prevData = footer;
     float MapRange(uint16_t value, float minOut, float maxOut, float minIn = 192.0f, float maxIn = 1792.0f);
+    int64_t packetTime = 0; // [us]
 };
 
 #endif /* SBUS_HPP */

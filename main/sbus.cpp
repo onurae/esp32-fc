@@ -67,6 +67,7 @@ bool Sbus::Read()
                     if (buf[i] == footer || ((buf[i] & 0x0F) == footer2))
                     {
                         newPacket = true;
+                        packetTime = esp_timer_get_time();
                         rxData.ch[0] = static_cast<uint16_t>(rxBuf[1] | ((rxBuf[2] << 8) & 0x07FF));
                         rxData.ch[1] = static_cast<uint16_t>((rxBuf[2] >> 3) | ((rxBuf[3] << 5) & 0x07FF));
                         rxData.ch[2] = static_cast<uint16_t>((rxBuf[3] >> 6) | (rxBuf[4] << 2) | ((rxBuf[5] << 10) & 0x07FF));
@@ -174,6 +175,18 @@ int Sbus::Write(const SbusData &txData)
     return txBytes;
 }
 
+bool Sbus::CheckStatus(int timeout)
+{
+    // If there is no or corrupted data for a while, it means there is a receiver or cable connection problem.
+    // If rxData.failsafe is true, there is no connection between Tx and Rx.
+    // Test Note: After the Tx is switched off, rxData.frameLost is true almost immediately and rxData.failSafe is true after 1 second.
+    if (rxData.failSafe == true || (esp_timer_get_time() - packetTime) > (timeout * 1000))
+    {
+        return false;
+    }
+    return true;
+}
+
 void Sbus::PrintData()
 {
     printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
@@ -191,8 +204,9 @@ void Sbus::PrintTest()
     int another = GetSwitch3Pos(6);
     uint16_t throttle_raw = sbusData.ch[2];
     float throttle = GetAnalog(3, 0.0f, 1.0f);
-    bool fs = GetFailSafe(); // returns true 1 second after the Tx is switched off.
-    bool fl = GetFrameLost(); // returns true almost immediately after the Tx is switched off.
-    // both failsafe and framelost are set to zero after the Tx is switched on.
+    bool fs = rxData.failSafe;
+    bool fl = rxData.frameLost;
+    // Test Note: After the Tx is switched off, rxData.frameLost is true almost immediately and rxData.failSafe is true after 1 second.
+    // Both failsafe and framelost are set to false after the Tx is switched on.
     printf("%d %f %d %d %d %f %d %d\n", ch0_raw, ch0, arm, another, throttle_raw, throttle, fs, fl);
 }

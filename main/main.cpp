@@ -20,7 +20,7 @@ extern "C" void app_main(void)
     I2c i2c(0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
 
-    uint16_t freq = 500;  // Main loop frequency [Hz]
+    uint16_t freq = 500; // Main loop frequency [Hz]
 
     Ahrs ahrs(&i2c);
     if (!ahrs.Init(freq)) // Sensor sample rate: (freq)
@@ -66,7 +66,7 @@ extern "C" void app_main(void)
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
-            //LoopForever();
+            // LoopForever();
         }
 
         // ahrs.Update(dt);
@@ -80,14 +80,15 @@ extern "C" void app_main(void)
         //  ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        //baro.Update(dt);
-        //baro.PrintAltVs();
+        // baro.Update(dt);
+        // baro.PrintAltVs();
 
-        if (sbus.Read()) // if it does not read for a while, it means there is a receiver or cable problem.
+        if (sbus.Read())
         {
             // sbus.PrintData();
-            sbus.PrintTest();
+            // sbus.PrintTest();
             float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
         }
+        // printf("%d\n", sbus.CheckStatus());
     }
 }
