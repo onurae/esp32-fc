@@ -83,17 +83,11 @@ extern "C" void app_main(void)
         //baro.Update(dt);
         //baro.PrintAltVs();
 
-        if (sbus.Read())
+        if (sbus.Read()) // if it does not read for a while, it means there is a receiver or cable problem.
         {
-            Sbus::SbusData sbusData = sbus.GetData();
-            //sbus.PrintData();
-            uint16_t ch0_raw = sbusData.ch[0];
-            float ch0 = sbus.GetAnalog(1, -1.0f, 1.0f);
-            int arm = sbus.GetSwitch2Pos(5);
-            int another = sbus.GetSwitch3Pos(6);
-            uint16_t throttle_raw = sbusData.ch[2];
-            float throttle = sbus.GetAnalog(3, 0.0f, 1.0f);
-            printf("%d %f %d %d %d %f\n", ch0_raw, ch0, arm, another, throttle_raw, throttle);
+            // sbus.PrintData();
+            sbus.PrintTest();
+            float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
         }
     }
 }

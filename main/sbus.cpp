@@ -101,14 +101,6 @@ Sbus::SbusData Sbus::GetData()
     return rxData;
 }
 
-void Sbus::PrintData()
-{
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
-           rxData.ch[0], rxData.ch[1], rxData.ch[2], rxData.ch[3], rxData.ch[4], rxData.ch[5], rxData.ch[6], rxData.ch[7],
-           rxData.ch[8], rxData.ch[9], rxData.ch[10], rxData.ch[11], rxData.ch[12], rxData.ch[13], rxData.ch[14], rxData.ch[15],
-           rxData.ch17, rxData.ch18, rxData.failSafe, rxData.frameLost);
-}
-
 float Sbus::MapRange(uint16_t value, float minOut, float maxOut, float minIn, float maxIn)
 {
     float out = (value - minIn) * (maxOut - minOut) / (maxIn - minIn) + minOut;
@@ -180,4 +172,27 @@ int Sbus::Write(const SbusData &txData)
     txBuf[24] = footer;
     const int txBytes = uart_write_bytes(uartPort, txBuf, sizeof(txBuf));
     return txBytes;
+}
+
+void Sbus::PrintData()
+{
+    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+           rxData.ch[0], rxData.ch[1], rxData.ch[2], rxData.ch[3], rxData.ch[4], rxData.ch[5], rxData.ch[6], rxData.ch[7],
+           rxData.ch[8], rxData.ch[9], rxData.ch[10], rxData.ch[11], rxData.ch[12], rxData.ch[13], rxData.ch[14], rxData.ch[15],
+           rxData.ch17, rxData.ch18, rxData.failSafe, rxData.frameLost);
+}
+
+void Sbus::PrintTest()
+{
+    Sbus::SbusData sbusData = GetData();
+    uint16_t ch0_raw = sbusData.ch[0];
+    float ch0 = GetAnalog(1, -1.0f, 1.0f);
+    int arm = GetSwitch2Pos(5);
+    int another = GetSwitch3Pos(6);
+    uint16_t throttle_raw = sbusData.ch[2];
+    float throttle = GetAnalog(3, 0.0f, 1.0f);
+    bool fs = GetFailSafe(); // returns true 1 second after the Tx is switched off.
+    bool fl = GetFrameLost(); // returns true almost immediately after the Tx is switched off.
+    // both failsafe and framelost are set to zero after the Tx is switched on.
+    printf("%d %f %d %d %d %f %d %d\n", ch0_raw, ch0, arm, another, throttle_raw, throttle, fs, fl);
 }

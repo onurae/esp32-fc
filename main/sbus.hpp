@@ -32,10 +32,15 @@ public:
     bool Read();
     int Write(const SbusData &txData);
     SbusData GetData();
-    void PrintData();
     float GetAnalog(uint16_t channel, float rangeMin, float rangeMax);
     int GetSwitch2Pos(uint16_t channel);
     int GetSwitch3Pos(uint16_t channel);
+    bool GetCh17() { return rxData.ch17; }
+    bool GetCh18() { return rxData.ch18; }
+    bool GetFailSafe() { return rxData.failSafe; }
+    bool GetFrameLost() { return rxData.frameLost; }
+    void PrintData();
+    void PrintTest();
 
 private:
     uart_port_t uartPort;
