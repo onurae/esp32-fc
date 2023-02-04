@@ -20,8 +20,9 @@ extern "C" void app_main(void)
     I2c i2c(0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
 
+    uint16_t freq = 500;  // Main loop frequency [Hz]
+
     Ahrs ahrs(&i2c);
-    uint16_t freq = 500;  // [Hz]
     if (!ahrs.Init(freq)) // Sensor sample rate: (freq)
     {
         printf("%s", "Ahrs Error!\n");
@@ -33,7 +34,7 @@ extern "C" void app_main(void)
     // ahrs.PrintMagForMotionCal(false); // false: raw, true: calibrated. 115200 bps.
 
     Baro baro(&i2c);
-    if (!baro.Init()) // Pressure refresh rate: (freq / 2)
+    if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
     {
         printf("%s", "Baro Error!\n");
         LoopForever();

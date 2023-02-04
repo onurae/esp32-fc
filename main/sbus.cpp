@@ -10,7 +10,7 @@
 
 #include "sbus.hpp"
 
-Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin) : uartPort(uartPort), txPin(txPin), rxPin(rxPin)
+Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin, uint8_t period) : uartPort(uartPort), txPin(txPin), rxPin(rxPin), period(period)
 {
 }
 
@@ -30,11 +30,11 @@ bool Sbus::Init()
     ESP_ERROR_CHECK(uart_set_pin(uartPort, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_flush(uartPort));
 
-    vTaskDelay(10 / portTICK_PERIOD_MS); // Wait for data.
+    vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait for data.
     if (Read())
     {
-        return true;
         printf("SBUS ready.\n");
+        return true;
     }
     return false;
 }

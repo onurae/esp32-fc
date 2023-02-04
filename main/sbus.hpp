@@ -18,7 +18,7 @@
 class Sbus
 {
 public:
-    Sbus(uart_port_t uartPort = UART_NUM_1, gpio_num_t txPin = GPIO_NUM_4, gpio_num_t rxPin = GPIO_NUM_5);
+    Sbus(uart_port_t uartPort = UART_NUM_1, gpio_num_t txPin = GPIO_NUM_4, gpio_num_t rxPin = GPIO_NUM_5, uint8_t period = 7);
     virtual ~Sbus() = default;
     struct SbusData
     {
@@ -41,6 +41,7 @@ private:
     uart_port_t uartPort;
     gpio_num_t txPin;
     gpio_num_t rxPin;
+    uint8_t period; // Receiver output [ms]
     const uint8_t header = 0x0F;
     const uint8_t footer = 0x00;
     const uint8_t footer2 = 0x04;
