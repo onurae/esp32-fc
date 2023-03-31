@@ -16,7 +16,7 @@ Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin, uint8_t per
 
 bool Sbus::Init()
 {
-    uart_config_t conf;
+    uart_config_t conf = {};
     conf.baud_rate = 100000;
     conf.data_bits = UART_DATA_8_BITS;
     conf.parity = UART_PARITY_EVEN;

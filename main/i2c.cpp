@@ -20,7 +20,7 @@ I2c::I2c(uint8_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS) :
 
 void I2c::MasterInit()
 {
-    i2c_config_t conf;
+    i2c_config_t conf = {};
     conf.mode = I2C_MODE_MASTER,
     conf.sda_io_num = sdaIO,
     conf.scl_io_num = sclIO,
