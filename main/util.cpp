@@ -25,6 +25,15 @@ void PrintCountDown(const char *s, uint8_t sec)
     PrintCountDown(sec);
 }
 
+void Wait(const char *s, uint8_t sec)
+{
+    printf("Wait: %s [%ds]\n", s, sec);
+    for (int i = sec; i > 0; i--)
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
 void LoopForever()
 {
     while (true)

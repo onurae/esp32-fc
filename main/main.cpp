@@ -75,13 +75,7 @@ extern "C" void app_main(void)
     Esc esc3(&escOperator2, GPIO_NUM_25);
     Esc esc4(&escOperator2, GPIO_NUM_33);
     escTimer.EnableAndStartTimer();
-    PrintCountDown("Esc arming sound", 3);
-
-    // No need.
-    //PrintCountDown("Esc in", 1);
-    //esc1.Update(2000);
-    //PrintCountDown("Esc out", 1);
-    //esc1.Update(1000);
+    Wait("Esc arming...", 3);
 
     PrintCountDown("Entering loop in", 3);
     int64_t prevTime = esp_timer_get_time();
@@ -161,5 +155,14 @@ extern "C" void app_main(void)
         esc4.Update(1000);
         LoopForever();
 #endif // ESCTEST
+
+        bool throttleCut = false;
+        if (throttleCut == true)
+        {
+            esc1.Update(1000);
+            esc2.Update(1000);
+            esc3.Update(1000);
+            esc4.Update(1000);
+        }
     }
 }

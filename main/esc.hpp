@@ -65,7 +65,7 @@ private:
     mcpwm_gen_handle_t generator;
     mcpwm_comparator_config_t comparatorConfig = {};
     mcpwm_generator_config_t generatorConfig = {};
-    uint16_t initialValue = 900;
+    uint16_t initialValue = 1000;
 
 public:
     Esc(EscOperator *oper, gpio_num_t pwmPin);
