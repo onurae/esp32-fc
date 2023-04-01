@@ -137,21 +137,21 @@ extern "C" void app_main(void)
 #endif // SERVOTEST
 
 #if ESCTEST
-        PrintCountDown("Esc 900", 3);
+        PrintCountDown("Esc 1 Start", 3);
         esc1.Update(1200);
-        PrintCountDown("Esc 1", 3);
+        PrintCountDown("Esc 1 Stop", 3);
         esc1.Update(1000);
-        PrintCountDown("Esc 1", 3);
+        PrintCountDown("Esc 2 Start", 3);
         esc2.Update(1200);
-        PrintCountDown("Esc 2", 3);
+        PrintCountDown("Esc 2 Stop", 3);
         esc2.Update(1000);
-        PrintCountDown("Esc 1", 3);
+        PrintCountDown("Esc 3 Start", 3);
         esc3.Update(1200);
-        PrintCountDown("Esc 3", 3);
+        PrintCountDown("Esc 3 Stop", 3);
         esc3.Update(1000);
-        PrintCountDown("Esc 1", 3);
+        PrintCountDown("Esc 4 Start", 3);
         esc4.Update(1200);
-        PrintCountDown("Esc 4", 3);
+        PrintCountDown("Esc 4 Stop", 3);
         esc4.Update(1000);
         LoopForever();
 #endif // ESCTEST
