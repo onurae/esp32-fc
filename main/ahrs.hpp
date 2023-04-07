@@ -23,12 +23,12 @@ class Ahrs
 {
 private:
     // Calibration data
-    float axb = -0.015989; // Accelerometer bias
-    float ayb = 0.002342;
-    float azb = 0.013717;
-    float gxb = -2.426104; // Gyroscope bias
-    float gyb = 1.183609;
-    float gzb = -0.518570;
+    float axb = -0.001001; // Accelerometer bias
+    float ayb = 0.002613;
+    float azb = -0.013119;
+    float gxb = -3.444483; // Gyroscope bias
+    float gyb = 1.160636;
+    float gzb = 0.662727;
     float mxb = 14.12; // Magnetometer bias
     float myb = 14.55;
     float mzb = -37.90;

@@ -13,11 +13,13 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/gpio.h"
 
 void PrintCountDown(uint8_t sec);
 void PrintCountDown(const char* s, uint8_t sec);
 void Wait(const char* s, uint8_t sec);
 void LoopForever();
+void BlinkLedOnly();
 float LinearScaledDeadband(float value, float deadbandCutoff);
 
 #endif /* UTIL_HPP */

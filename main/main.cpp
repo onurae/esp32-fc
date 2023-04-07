@@ -22,6 +22,9 @@
 
 extern "C" void app_main(void)
 {
+    PrintCountDown("Starting in", 3);
+    //BlinkLedOnly();
+    
     I2c i2c(0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
 
@@ -49,7 +52,7 @@ extern "C" void app_main(void)
     if (!sbus.Init())
     {
         printf("%s", "Sbus Error!\n");
-        LoopForever();
+        //LoopForever();
     }
 
     //ServoTimer servoTimer(0);
@@ -66,16 +69,16 @@ extern "C" void app_main(void)
     int step = 2;
 #endif // SERVOTEST
 
-    PrintCountDown("Esc arming in", 3);
-    EscTimer escTimer(1);
-    EscOperator escOperator1(&escTimer);
-    Esc esc1(&escOperator1, GPIO_NUM_27);
-    Esc esc2(&escOperator1, GPIO_NUM_26);
-    EscOperator escOperator2(&escTimer);
-    Esc esc3(&escOperator2, GPIO_NUM_25);
-    Esc esc4(&escOperator2, GPIO_NUM_33);
-    escTimer.EnableAndStartTimer();
-    Wait("Esc arming...", 3);
+    //PrintCountDown("Esc arming in", 3);
+    //EscTimer escTimer(1);
+    //EscOperator escOperator1(&escTimer);
+    //Esc esc1(&escOperator1, GPIO_NUM_27);
+    //Esc esc2(&escOperator1, GPIO_NUM_26);
+    //EscOperator escOperator2(&escTimer);
+    //Esc esc3(&escOperator2, GPIO_NUM_25);
+    //Esc esc4(&escOperator2, GPIO_NUM_33);
+    //escTimer.EnableAndStartTimer();
+    //Wait("Esc arming...", 3);
 
     PrintCountDown("Entering loop in", 3);
     int64_t prevTime = esp_timer_get_time();
@@ -99,7 +102,7 @@ extern "C" void app_main(void)
             // LoopForever();
         }
 
-        // ahrs.Update(dt);
+         ahrs.Update(dt);
         //  ahrs.PrintAccRaw();
         //  ahrs.PrintAccCalibrated();
         //  ahrs.PrintGyroRaw();
@@ -108,7 +111,7 @@ extern "C" void app_main(void)
         //  ahrs.PrintMagCalibrated();
         //  ahrs.PrintTemp();
         //  ahrs.PrintQuaternions();
-        // ahrs.PrintEulerAngles();
+         ahrs.PrintEulerAngles();
 
         // baro.Update(dt);
         // baro.PrintAltVs();
@@ -156,13 +159,13 @@ extern "C" void app_main(void)
         LoopForever();
 #endif // ESCTEST
 
-        bool throttleCut = false;
-        if (throttleCut == true)
-        {
-            esc1.Update(1000);
-            esc2.Update(1000);
-            esc3.Update(1000);
-            esc4.Update(1000);
-        }
+        //bool throttleCut = false;
+        //if (throttleCut == true)
+        //{
+        //    esc1.Update(1000);
+        //    esc2.Update(1000);
+        //    esc3.Update(1000);
+        //    esc4.Update(1000);
+        //}
     }
 }
