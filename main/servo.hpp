@@ -13,6 +13,7 @@
 
 #include "driver/mcpwm_prelude.h"
 #include "driver/gpio.h"
+#include "util.hpp"
 
 class ServoTimer
 {
@@ -75,5 +76,7 @@ public:
     virtual ~Servo() = default;
     bool Update(int angleDeg); // [deg]
 };
+
+void ServoTest(Servo* servo1, Servo* servo2, Servo* servo3, Servo* servo4);
 
 #endif /* SERVO_HPP */

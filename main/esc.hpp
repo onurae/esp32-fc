@@ -13,6 +13,7 @@
 
 #include "driver/mcpwm_prelude.h"
 #include "driver/gpio.h"
+#include "util.hpp"
 
 class EscTimer
 {
@@ -72,5 +73,7 @@ public:
     virtual ~Esc() = default;
     bool Update(uint16_t value); // [1000-2000]
 };
+
+void EscTest(Esc* esc1, Esc* esc2, Esc* esc3, Esc* esc4);
 
 #endif /* ESC_HPP */

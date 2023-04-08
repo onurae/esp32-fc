@@ -50,3 +50,24 @@ bool Esc::Update(uint16_t value)
     }
     return false;
 }
+
+void EscTest(Esc* esc1, Esc* esc2, Esc* esc3, Esc* esc4)
+{
+    PrintCountDown("Esc 1 Start", 3);
+    esc1->Update(1200);
+    PrintCountDown("Esc 1 Stop", 3);
+    esc1->Update(1000);
+    PrintCountDown("Esc 2 Start", 3);
+    esc2->Update(1200);
+    PrintCountDown("Esc 2 Stop", 3);
+    esc2->Update(1000);
+    PrintCountDown("Esc 3 Start", 3);
+    esc3->Update(1200);
+    PrintCountDown("Esc 3 Stop", 3);
+    esc3->Update(1000);
+    PrintCountDown("Esc 4 Start", 3);
+    esc4->Update(1200);
+    PrintCountDown("Esc 4 Stop", 3);
+    esc4->Update(1000);
+    BlinkLedForever();
+}

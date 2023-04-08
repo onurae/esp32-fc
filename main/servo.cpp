@@ -52,3 +52,24 @@ bool Servo::Update(int angleDeg)
     }
     return false;
 }
+
+void ServoTest(Servo* servo1, Servo* servo2, Servo* servo3, Servo* servo4)
+{
+    int angle = 0;
+    int step = 2;
+    while(true)
+    {
+        servo1->Update(angle);
+        servo2->Update(angle * -1.0f);
+        servo3->Update(angle * 0.5f);
+        servo4->Update(angle * -0.5f);
+        printf("%d\n", angle);
+        // Wait for servo to rotate, ex: @5V, 0.10s/60degree at no load.
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        if ((angle + step) > 45 || (angle + step) < -45)
+        {
+            step *= -1;
+        }
+        angle += step;
+    }
+}
