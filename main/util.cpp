@@ -34,26 +34,18 @@ void Wait(const char *s, uint8_t sec)
     }
 }
 
-void LoopForever()
-{
-    while (true)
-    {
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-    }
-}
-
-void BlinkLedOnly()
+void BlinkLedForever(int intervalMS)
 {
     gpio_num_t led = GPIO_NUM_22;
     gpio_set_direction(led, GPIO_MODE_OUTPUT);
     bool state = false;
     gpio_set_level(led, state);
+    printf("Infinite loop: Led ON/OFF\n");
     while(true)
     {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(intervalMS / portTICK_PERIOD_MS);
         state = !state;
         gpio_set_level(led, state);
-        printf("Turning the LED %s!\n", state == false ? "ON" : "OFF");
     }
 }
 

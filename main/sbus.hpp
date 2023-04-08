@@ -29,7 +29,8 @@ public:
         bool failSafe;
         bool frameLost;
     };
-    bool Init();
+    void Init();
+    bool IsReady();
     bool Read();
     int Write(const SbusData &txData);
     SbusData GetData();

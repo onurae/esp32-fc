@@ -18,12 +18,12 @@
 #include "esc.hpp"
 
 #define SERVOTEST 0
-#define ESCTEST 0
+#define ESCTEST 1
 
 extern "C" void app_main(void)
 {
-    PrintCountDown("Starting in", 3);
-    //BlinkLedOnly();
+    PrintCountDown("Starting in", 10);
+    //BlinkLedForever();
     
     I2c i2c(0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
@@ -34,7 +34,7 @@ extern "C" void app_main(void)
     if (!ahrs.Init(freq)) // Sensor sample rate: (freq)
     {
         printf("%s", "Ahrs Error!\n");
-        LoopForever();
+        BlinkLedForever();
     }
 
     // ahrs.CalibrateAccGyro();
@@ -45,14 +45,14 @@ extern "C" void app_main(void)
     if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
     {
         printf("%s", "Baro Error!\n");
-        LoopForever();
+        BlinkLedForever();
     }
 
     Sbus sbus;
-    if (!sbus.Init())
+    sbus.Init();
+    while(!sbus.IsReady())
     {
-        printf("%s", "Sbus Error!\n");
-        //LoopForever();
+        Wait("Sbus data...", 3);
     }
 
     //ServoTimer servoTimer(0);
@@ -69,16 +69,16 @@ extern "C" void app_main(void)
     int step = 2;
 #endif // SERVOTEST
 
-    //PrintCountDown("Esc arming in", 3);
-    //EscTimer escTimer(1);
-    //EscOperator escOperator1(&escTimer);
-    //Esc esc1(&escOperator1, GPIO_NUM_27);
-    //Esc esc2(&escOperator1, GPIO_NUM_26);
-    //EscOperator escOperator2(&escTimer);
-    //Esc esc3(&escOperator2, GPIO_NUM_25);
-    //Esc esc4(&escOperator2, GPIO_NUM_33);
-    //escTimer.EnableAndStartTimer();
-    //Wait("Esc arming...", 3);
+    PrintCountDown("Esc arming in", 3);
+    EscTimer escTimer(1);
+    EscOperator escOperator1(&escTimer);
+    Esc esc1(&escOperator1, GPIO_NUM_33);
+    Esc esc2(&escOperator1, GPIO_NUM_27);
+    EscOperator escOperator2(&escTimer);
+    Esc esc3(&escOperator2, GPIO_NUM_25);
+    Esc esc4(&escOperator2, GPIO_NUM_26);
+    escTimer.EnableAndStartTimer();
+    Wait("Esc arming...", 3);
 
     PrintCountDown("Entering loop in", 3);
     int64_t prevTime = esp_timer_get_time();
@@ -99,7 +99,7 @@ extern "C" void app_main(void)
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
-            // LoopForever();
+            // BlinkLedForever();
         }
 
          ahrs.Update(dt);
@@ -111,18 +111,18 @@ extern "C" void app_main(void)
         //  ahrs.PrintMagCalibrated();
         //  ahrs.PrintTemp();
         //  ahrs.PrintQuaternions();
-         ahrs.PrintEulerAngles();
+        // ahrs.PrintEulerAngles();
 
         // baro.Update(dt);
         // baro.PrintAltVs();
 
-        //if (sbus.Read())
-        //{
-        //    // sbus.PrintData();
-        //    // sbus.PrintTest();
-        //    float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
-        //}
-        // printf("%d\n", sbus.CheckStatus());
+        if (sbus.Read())
+        {
+            sbus.PrintData();
+            // sbus.PrintTest();
+            float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
+        }
+        //printf("%d\n", sbus.CheckStatus());
 
 #if SERVOTEST
         servo1.Update(angle);
@@ -156,16 +156,16 @@ extern "C" void app_main(void)
         esc4.Update(1200);
         PrintCountDown("Esc 4 Stop", 3);
         esc4.Update(1000);
-        LoopForever();
+        BlinkLedForever();
 #endif // ESCTEST
 
-        //bool throttleCut = false;
-        //if (throttleCut == true)
-        //{
-        //    esc1.Update(1000);
-        //    esc2.Update(1000);
-        //    esc3.Update(1000);
-        //    esc4.Update(1000);
-        //}
+        bool throttleCut = false;
+        if (throttleCut == true)
+        {
+            esc1.Update(1000);
+            esc2.Update(1000);
+            esc3.Update(1000);
+            esc4.Update(1000);
+        }
     }
 }

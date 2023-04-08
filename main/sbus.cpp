@@ -14,7 +14,7 @@ Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin, uint8_t per
 {
 }
 
-bool Sbus::Init()
+void Sbus::Init()
 {
     uart_config_t conf = {};
     conf.baud_rate = 100000;
@@ -29,7 +29,10 @@ bool Sbus::Init()
     ESP_ERROR_CHECK(uart_set_line_inverse(uartPort, UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV));
     ESP_ERROR_CHECK(uart_set_pin(uartPort, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_flush(uartPort));
+}
 
+bool Sbus::IsReady()
+{
     vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait for data.
     if (Read())
     {
