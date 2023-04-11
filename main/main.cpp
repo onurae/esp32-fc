@@ -16,11 +16,15 @@
 #include "sbus.hpp"
 #include "servo.hpp"
 #include "esc.hpp"
+#include "battery.hpp"
 
 extern "C" void app_main(void)
 {
     PrintCountDown("Starting in", 10);
-    //BlinkLedForever();
+    Battery battery;
+    battery.Init();
+    printf("Battery Voltage: %d\n", battery.GetVoltage());
+    BlinkLedForever();
     
     I2c i2c(0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
