@@ -10,7 +10,7 @@
 
 #include "sbus.hpp"
 
-Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin, uint8_t period) : uartPort(uartPort), txPin(txPin), rxPin(rxPin), period(period)
+Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin) : uartPort(uartPort), txPin(txPin), rxPin(rxPin)
 {
 }
 
@@ -29,17 +29,20 @@ void Sbus::Init()
     ESP_ERROR_CHECK(uart_set_line_inverse(uartPort, UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV));
     ESP_ERROR_CHECK(uart_set_pin(uartPort, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_flush(uartPort));
+
+    printf("SBUS initialization...\n");
+    uint8_t period = 7;                            // [ms]
+    vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait for data.
+    while (!Read())
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    printf("SBUS ready.\n");
 }
 
-bool Sbus::IsReady()
+void Sbus::Flush()
 {
-    vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait for data.
-    if (Read())
-    {
-        printf("SBUS ready.\n");
-        return true;
-    }
-    return false;
+    uart_flush(uartPort);
 }
 
 bool Sbus::Read()
@@ -119,7 +122,7 @@ float Sbus::GetAnalog(uint16_t channel, float rangeMin, float rangeMax)
 int Sbus::GetSwitch2Pos(uint16_t channel)
 {
     float m = MapRange(rxData.ch[channel - 1], 0, 1);
-    if (m > 0.5f) 
+    if (m > 0.5f)
     {
         return 1;
     }
@@ -136,7 +139,7 @@ int Sbus::GetSwitch3Pos(uint16_t channel)
     {
         return 2;
     }
-    else if ( m > 0.33f)
+    else if (m > 0.33f)
     {
         return 1;
     }
