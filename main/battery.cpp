@@ -48,9 +48,9 @@ int Battery::GetVoltage()
     {
         adcReading /= j;
     }
-    printf("ADC%d Channel[%d] Raw Data(Average): %ld\n", ADC_UNIT_1 + 1, adcChannel, adcReading);
+    //printf("ADC%d Channel[%d] Raw Data(Average): %ld\n", ADC_UNIT_1 + 1, adcChannel, adcReading);
     ret = adc_cali_raw_to_voltage(adcCaliHandle, adcReading, &voltage);
-    printf("ADC%d Channel[%d] Cali Voltage: %d mV\n", ADC_UNIT_1 + 1, adcChannel, voltage);
+    //printf("ADC%d Channel[%d] Cali Voltage: %d mV\n", ADC_UNIT_1 + 1, adcChannel, voltage);
     if (ret != ESP_OK)
     {
         return 0;

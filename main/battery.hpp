@@ -31,7 +31,7 @@ public:
     virtual ~Battery() = default;
 
     void Init();
-    int GetVoltage();
+    int GetVoltage(); // [mV]
     bool Delete();
 };
 
