@@ -35,7 +35,7 @@ int Battery::GetVoltage()
     esp_err_t ret;
     uint32_t adcReading = 0;
     int j = 0;
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < 8; i++)
     {
         ret = adc_oneshot_read(adcHandle, adcChannel, &adcRaw);
         if (ret == ESP_OK)
