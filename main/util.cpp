@@ -34,21 +34,6 @@ void Wait(const char *s, uint8_t sec)
     }
 }
 
-void BlinkLedForever(int intervalMS)
-{
-    gpio_num_t led = GPIO_NUM_22;
-    gpio_set_direction(led, GPIO_MODE_OUTPUT);
-    bool state = false;
-    gpio_set_level(led, state);
-    printf("Infinite loop: Led ON/OFF\n");
-    while(true)
-    {
-        vTaskDelay(intervalMS / portTICK_PERIOD_MS);
-        state = !state;
-        gpio_set_level(led, state);
-    }
-}
-
 float LinearScaledDeadband(float value, float deadbandCutoff)
 {
     if (std::abs(value) <= deadbandCutoff)
