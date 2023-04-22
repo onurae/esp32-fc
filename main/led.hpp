@@ -26,6 +26,7 @@ public:
     virtual ~Led() = default;
 
     void Init();
+    void Blink(int numBlinks, int onTime, int offTime); // [ms]
     void BlinkForever(int intervalMS = 500);
     void TurnOn() { gpio_set_level(led, false); } // Led is on when the level is false.
     void TurnOff() { gpio_set_level(led, true); }

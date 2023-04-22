@@ -16,6 +16,18 @@ void Led::Init()
     TurnOff();
 }
 
+void Led::Blink(int numBlinks, int onTime, int offTime)
+{
+    for (int i = 0; i < numBlinks; i++)
+    {
+        TurnOff();
+        vTaskDelay(offTime / portTICK_PERIOD_MS);
+        TurnOn();
+        vTaskDelay(onTime / portTICK_PERIOD_MS);
+    }
+    TurnOff();
+}
+
 void Led::BlinkForever(int intervalMS)
 {
     printf("Infinite loop: Led ON/OFF\n");
