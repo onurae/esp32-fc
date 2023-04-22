@@ -69,5 +69,5 @@ void EscTest(Esc* esc1, Esc* esc2, Esc* esc3, Esc* esc4)
     esc4->Update(1200);
     PrintCountDown("Esc 4 Stop", 3);
     esc4->Update(1000);
-    BlinkLedForever();
+    WaitForever();
 }
