@@ -13,7 +13,6 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
 
 void PrintCountDown(uint8_t sec);
 void PrintCountDown(const char* s, uint8_t sec);
