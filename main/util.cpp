@@ -34,6 +34,15 @@ void Wait(const char *s, uint8_t sec)
     }
 }
 
+void WaitForever()
+{
+    printf("Wait: Forever!\n");
+    while(true)
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
 float LinearScaledDeadband(float value, float deadbandCutoff)
 {
     if (std::abs(value) <= deadbandCutoff)
