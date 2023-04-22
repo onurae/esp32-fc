@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
+#include "led.hpp"
 #include "ahrs.hpp"
 #include "baro.hpp"
 #include "sbus.hpp"
@@ -34,7 +35,7 @@ extern "C" void Task2(void *params)
 
     Battery battery;
     battery.Init();
-    printf("Battery Voltage: %d\n", battery.GetVoltage());
+    //printf("Battery Voltage: %d\n", battery.GetVoltage());
 
     Frsky frsky;
     frsky.Init();
@@ -69,20 +70,23 @@ extern "C" void Task1(void *params)
 {
     printf("Main task has been started!\n");
 
+    Led led;
+    led.Init();
+
     size_t size = xPortGetFreeHeapSize();
     printf("FreeHeapSize: ");
     printf("%d\n", size);
 
-    I2c i2c(0, 19, 23); // Port, SCL, SDA
+    I2c i2c(I2C_NUM_0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();   // Initialize I2C
 
     uint16_t freq = 500; // Main loop frequency [Hz]
 
     Ahrs ahrs(&i2c);
-    if (!ahrs.Init(freq)) // Sensor sample rate: (freq)
+    if (!ahrs.Init(freq*2)) // Sensor sample rate: (freq*2)
     {
         printf("%s", "Ahrs Error!\n");
-        BlinkLedForever();
+        led.BlinkForever();
     }
 
     // ahrs.CalibrateAccGyro();
@@ -93,11 +97,11 @@ extern "C" void Task1(void *params)
     if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
     {
         printf("%s", "Baro Error!\n");
-        BlinkLedForever();
+        led.BlinkForever();
     }
-
-    Sbus sbus;
-    sbus.Init();
+    
+    //Sbus sbus;
+    //sbus.Init();
 
     // ServoTimer servoTimer(0);
     // ServoOperator servoOperator1(&servoTimer);
@@ -109,25 +113,40 @@ extern "C" void Task1(void *params)
     // servoTimer.EnableAndStartTimer();
     // ServoTest(&servo1, &servo2, &servo3, &servo4);
 
-    PrintCountDown("Esc arming in", 3);
-    EscTimer escTimer(1);
-    EscOperator escOperator1(&escTimer);
-    Esc esc1(&escOperator1, GPIO_NUM_33);
-    Esc esc2(&escOperator1, GPIO_NUM_27);
-    EscOperator escOperator2(&escTimer);
-    Esc esc3(&escOperator2, GPIO_NUM_25);
-    Esc esc4(&escOperator2, GPIO_NUM_26);
-    escTimer.EnableAndStartTimer();
-    Wait("Esc arming...", 3);
+    //PrintCountDown("Esc arming in", 3);
+    //EscTimer escTimer(1);
+    //EscOperator escOperator1(&escTimer);
+    //Esc esc1(&escOperator1, GPIO_NUM_33);
+    //Esc esc2(&escOperator1, GPIO_NUM_27);
+    //EscOperator escOperator2(&escTimer);
+    //Esc esc3(&escOperator2, GPIO_NUM_25);
+    //Esc esc4(&escOperator2, GPIO_NUM_26);
+    //escTimer.EnableAndStartTimer();
+    //Wait("Esc arming...", 3);
     // EscTest(&esc1, &esc2, &esc3, &esc4);
 
+    {
+        bool isConverged = false;
+        TickType_t xLastWakeTime = xTaskGetTickCount();
+        while(isConverged == false)
+        {
+            xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000 / freq));
+            ahrs.Update((1000 / freq) * 0.001f);
+            ahrs.PrintEulerAngles();
+            if (false)
+            {
+                isConverged = true;
+            }
+        }
+    }
+    
     PrintCountDown("Entering loop in", 3);
     int64_t prevTime = esp_timer_get_time();
     int64_t currentTime = prevTime;
     float dt = 0;
 
-    xTaskCreate(Task2, "mySecondTask", 4096, NULL, 0, NULL); // Low priority.
-    sbus.Flush();
+    //xTaskCreate(Task2, "mySecondTask", 4096, NULL, 0, NULL); // Low priority.
+    //sbus.Flush();
     TickType_t xLastWakeTime = xTaskGetTickCount();
     while (true)
     {
@@ -139,11 +158,11 @@ extern "C" void Task1(void *params)
         prevTime = currentTime;
         currentTime = esp_timer_get_time();         // [us]
         dt = (currentTime - prevTime) / 1000000.0f; // [s]
-        // printf("dt: %d\t", (uint16_t)(currentTime - prevTime));
+        //int a = ((currentTime - prevTime) != 2000) ? printf("dt: %d\n", (uint16_t)(currentTime - prevTime)) : 0;
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
-            // BlinkLedForever();
+            // led.BlinkForever();
         }
 
         ahrs.Update(dt);
@@ -157,25 +176,25 @@ extern "C" void Task1(void *params)
         //  ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        // baro.Update(dt);
+        baro.Update(dt);
         // baro.PrintAltVs();
 
-        if (sbus.Read())
-        {
-            // sbus.PrintData();
-            //  sbus.PrintTest();
-            float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
-        }
+        //if (sbus.Read())
+        //{
+        //    // sbus.PrintData();
+        //    //  sbus.PrintTest();
+        //    float ch1 = sbus.GetAnalog(1, -1.0f, 1.0f);
+        //}
         // printf("%d\n", sbus.CheckStatus());
 
-        bool throttleCut = false;
-        if (throttleCut == true)
-        {
-            esc1.Update(1000);
-            esc2.Update(1000);
-            esc3.Update(1000);
-            esc4.Update(1000);
-        }
+        //bool throttleCut = false;
+        //if (throttleCut == true)
+        //{
+        //    esc1.Update(1000);
+        //    esc2.Update(1000);
+        //    esc3.Update(1000);
+        //    esc4.Update(1000);
+        //}
     }
 }
 
