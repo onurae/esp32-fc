@@ -88,6 +88,10 @@ void Ahrs::CalculateCalibratedAccGyro()
         gyc = gyr - gyb;
         gzc = gzr - gzb;
     }
+    else
+    {
+        printf("AccGyro data not ready\n");
+    }
 }
 
 void Ahrs::CalculateCalibratedMag()
@@ -97,6 +101,10 @@ void Ahrs::CalculateCalibratedMag()
         mxc = mxs * (mxr - mxb);
         myc = mys * (myr - myb);
         mzc = mzs * (mzr - mzb);
+    }
+    else
+    {
+        //printf("Mag data not ready\n");
     }
 }
 
@@ -345,7 +353,7 @@ void Ahrs::PrintAccGyroBias()
     printf("%s%f\n", "biasGx = ", gxb);
     printf("%s%f\n", "biasGy = ", gyb);
     printf("%s%f\n", "biasGz = ", gzb);
-    BlinkLedForever();
+    WaitForever();
 }
 
 void Ahrs::PrintMagBiasScale()
@@ -355,7 +363,7 @@ void Ahrs::PrintMagBiasScale()
     printf("Bias = x: %f y: %f z: %f\n", mxb, myb, mzb);
     printf("%s", "Soft iron: \n");
     printf("Scale = x: %f y: %f z: %f\n", mxs, mys, mzs);
-    BlinkLedForever();
+    WaitForever();
 }
 
 float Ahrs::DegToRad(float deg)
