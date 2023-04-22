@@ -10,7 +10,7 @@
 
 #include "i2c.hpp"
 
-I2c::I2c(uint8_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS) : 
+I2c::I2c(i2c_port_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS) : 
     masterPort(masterPort),
     sclIO(sclIO),
     sdaIO(sdaIO),

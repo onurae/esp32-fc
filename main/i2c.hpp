@@ -16,13 +16,13 @@
 class I2c
 {
 private:
-    uint8_t masterPort;
+    i2c_port_t masterPort;
     uint8_t sclIO;
     uint8_t sdaIO;
     uint16_t timeoutMS;
 
 public:
-    I2c(uint8_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS = 1000);
+    I2c(i2c_port_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS = 1000);
     virtual ~I2c() = default;
 
     void MasterInit();
