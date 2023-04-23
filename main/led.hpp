@@ -19,7 +19,7 @@ class Led
 {
 private:
     gpio_num_t led;
-    bool state = false;
+    bool state = false; // ON: true, OFF: false
 
 public:
     Led(gpio_num_t led = GPIO_NUM_22) { this->led = led; }
@@ -28,8 +28,9 @@ public:
     void Init();
     void Blink(int numBlinks, int onTime, int offTime); // [ms]
     void BlinkForever(int intervalMS = 500);
-    void TurnOn() { gpio_set_level(led, false); } // Led is on when the level is false.
-    void TurnOff() { gpio_set_level(led, true); }
+    void TurnOn();
+    void TurnOff();
+    void Flip();
 };
 
 #endif /* LED_HPP */

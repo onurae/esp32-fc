@@ -31,10 +31,30 @@ void Led::Blink(int numBlinks, int onTime, int offTime)
 void Led::BlinkForever(int intervalMS)
 {
     printf("Infinite loop: Led ON/OFF\n");
-    while(true)
+    while (true)
     {
-        state = !state;
-        gpio_set_level(led, state);
+        Flip();
         vTaskDelay(intervalMS / portTICK_PERIOD_MS);
     }
+}
+
+void Led::TurnOn()
+{
+    if (gpio_set_level(led, false) == ESP_OK) // Led is on when the level is false.
+    {
+        state = true;
+    }
+}
+
+void Led::TurnOff()
+{
+    if (gpio_set_level(led, true) == ESP_OK)
+    {
+        state = false;
+    }
+}
+
+void Led::Flip()
+{
+    state ? TurnOff() : TurnOn();
 }
