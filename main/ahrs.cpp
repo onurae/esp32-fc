@@ -104,7 +104,7 @@ void Ahrs::CalculateCalibratedMag()
     }
     else
     {
-        //printf("Mag data not ready\n");
+        // printf("Mag data not ready\n");
     }
 }
 
@@ -585,4 +585,58 @@ void Ahrs::PrintQuaternions()
 void Ahrs::PrintEulerAngles()
 {
     printf("%s%.1f, %s%.1f, %s%.1f\n", "phi: ", phi, "theta: ", theta, "psi: ", psi);
+}
+
+void Ahrs::Converge(uint16_t freq)
+{
+    bool isConverged = false;
+    float deltaPhi = 0;
+    float deltaTheta = 0;
+    float deltaPsi = 0;
+    float prevPhi = 0;
+    float prevTheta = 0;
+    float prevPsi = 0;
+    int64_t i = 0;
+
+    BaseType_t xWasDelayed;                         // Deadline missed or not
+    float dt = 0;                                   // Time step
+    int64_t prevTime = 0;                           // Previous time [us]
+    int64_t elapsedTime = 0;                        // Elapsed time [us]
+    int64_t currentTime = esp_timer_get_time();     // Current time [us]
+    const int loopTime = 1000 / freq;               // Loop time [ms]
+    TickType_t xLastWakeTime = xTaskGetTickCount(); // Last wake time
+    while (isConverged == false)
+    {
+        xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(loopTime)); // Wait for the next cycle.
+        prevTime = currentTime;
+        currentTime = esp_timer_get_time();   // [us]
+        elapsedTime = currentTime - prevTime; // [us]
+        dt = elapsedTime / 1000000.0f;        // [s]
+        Update(dt);
+        PrintEulerAngles();
+        if (xWasDelayed == pdFALSE)
+        {
+            printf("%s", "Deadline missed!\n");
+        }
+        // Calculate delta values for every 2 sec.
+        if (i > freq * 2)
+        {
+            i = 0;
+            float v1 = GetPhi();
+            float v2 = GetTheta();
+            float v3 = GetPsi();
+            deltaPhi = v1 - prevPhi;
+            deltaTheta = v2 - prevTheta;
+            deltaPsi = v3 - prevPsi;
+            prevPhi = v1;
+            prevTheta = v2;
+            prevPsi = v3;
+            float tol = 0.1f; // Tolerance [deg]
+            if (abs(deltaPhi) < tol && abs(deltaTheta) < tol && abs(deltaPsi) < tol)
+            {
+                isConverged = true;
+            }
+        }
+        i += 1;
+    }
 }

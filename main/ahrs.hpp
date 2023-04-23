@@ -18,6 +18,7 @@
 #include "i2c.hpp"
 #include "util.hpp"
 #include <cmath>
+#include "esp_timer.h"
 
 class Ahrs
 {
@@ -124,6 +125,14 @@ public:
     bool Init(uint16_t sampleRate);
     void Update(float dt);
 
+    // Rates & Angles
+    float GetP() { return gxf; }
+    float GetQ() { return gyf; }
+    float GetR() { return gzf; }
+    float GetPhi() { return phi; }
+    float GetTheta() { return theta; }
+    float GetPsi() { return psi; }
+
     // Calibration
     void CalibrateAccGyro();
     void CalibrateMag();
@@ -141,6 +150,9 @@ public:
     void PrintMagBiasScale();
     void PrintQuaternions();
     void PrintEulerAngles();
+
+    // Madgwick
+    void Converge(uint16_t freq);
 };
 
 #endif /* AHRS_HPP */
