@@ -56,8 +56,12 @@ extern "C" void Task3(void *params)
         i += 1;
         if (i > 500) // Approximately 500*2 = 1 second.
         {
-            frsky.SetVoltage(battery.GetVoltage() / 1000.0f);
             i = 0;
+            int v = battery.GetVoltage(); // Sometimes it returns unexpected value [mV]. TODO
+            if (v >= 0 && v < 15000)      // 3S lipo
+            {
+                frsky.SetVoltage(v / 1000.0f);
+            }
         }
         frsky.Operate();
     }
@@ -98,12 +102,12 @@ extern "C" void Task2(void *params)
             {
                 p->ch1_rud = sbus.GetAnalog(1, -1.0f, 1.0f);
                 p->ch2_ele = sbus.GetAnalog(2, -1.0f, 1.0f);
-                p->ch3_thr = sbus.GetAnalog(3, 0.0f, 1.0f);
+                p->ch3_thr = sbus.GetAnalog(3, 0.0f, 0.95f); // There is an esc problem at full throttle. 1.0 -> 0.95. TODO
                 p->ch4_ail = sbus.GetAnalog(4, -1.0f, 1.0f);
                 p->ch5_2po = sbus.GetSwitch2Pos(5);
                 p->ch6_3po = sbus.GetSwitch3Pos(6);
             }
-            else // Radio failsafe values.
+            else // Radio failsafe values. Radio setting: Hold.
             {
                 p->ch1_rud = 0;
                 p->ch2_ele = 0;
@@ -140,6 +144,10 @@ extern "C" void Task1(void *params)
         printf("%s", "Ahrs Error!\n");
         led.BlinkForever(); // Do not proceed.
     }
+    Wait("Turn the heading to the north for fast sensor fusion convergence.", 3);
+    ahrs.Converge(freq);    // Keep it steady.
+    led.Blink(5, 100, 100); // Indicates convergence.
+    led.TurnOn();
 
     // ahrs.CalibrateAccGyro();
     // ahrs.CalibrateMag();
@@ -156,8 +164,11 @@ extern "C" void Task1(void *params)
     xTaskCreate(Task2, "RadioTask", 4096, &radio, 2, NULL);
     while (radio.ready == false)
     {
-        Wait("Radio", 2);
+        Wait("Radio", 1);
+        led.Flip();
     }
+    led.Blink(5, 100, 100); // Indicates connected.
+    led.TurnOn();
 
     // ServoTimer servoTimer(0);
     // ServoOperator servoOperator1(&servoTimer);
@@ -179,36 +190,21 @@ extern "C" void Task1(void *params)
     Esc esc4(&escOperator2, GPIO_NUM_26);
     escTimer.EnableAndStartTimer();
     Wait("Esc arming...", 3);
+    bool isArmed = true;
+    led.Blink(5, 100, 100); // Indicates armed.
     // EscTest(&esc1, &esc2, &esc3, &esc4); // Do not proceed after test.
 
-    // ! disarm first, arm in the main loop.
-
-    //{
-    //    bool isConverged = false;
-    //    TickType_t xLastWakeTime = xTaskGetTickCount();
-    //    while(isConverged == false)
-    //    {
-    //        xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000 / freq));
-    //        ahrs.Update((1000 / freq) * 0.001f);
-    //        ahrs.PrintEulerAngles();
-    //        if (false)
-    //        {
-    //            isConverged = true;
-    //        }
-    //    }
-    //}
-
     xTaskCreate(Task3, "TelemetryTask", 4096, NULL, 1, NULL);   // Low priority.
-    led.Blink(3, 150, 75);                                      // Indicates entering loop.
     xTaskCreate(Task4, "MainLoopLedTask", 4096, &led, 0, NULL); // Very low priority.
     Wait("Task initialization...", 1);                          // Task3 & Task4 initializing...
     PrintCountDown("Entering loop in", 3);                      // Entering loop counter.
+    led.Blink(3, 150, 75);                                      // Indicates entering loop.
     BaseType_t xWasDelayed;                                     // Deadline missed or not
     float dt = 0;                                               // Time step
     int64_t prevTime = 0;                                       // Previous time [us]
     int64_t elapsedTime = 0;                                    // Elapsed time [us]
     int64_t currentTime = esp_timer_get_time();                 // Current time [us]
-    const int loopTime = 1000 / freq;                           // [ms]
+    const int loopTime = 1000 / freq;                           // Loop time [ms]
     TickType_t xLastWakeTime = xTaskGetTickCount();             // Last wake time
     while (true)
     {
@@ -237,22 +233,27 @@ extern "C" void Task1(void *params)
         baro.Update(dt);
         // baro.PrintAltVs();
 
-        if (radio.ch5_2po == 1 || radio.status == false)
+        if (radio.ch5_2po == 0) // Disarm
         {
+            isArmed = false;
             esc1.Update(1000);
             esc2.Update(1000);
             esc3.Update(1000);
             esc4.Update(1000);
+            // reset pid etc..
         }
-        else
+        else if (radio.ch5_2po == 1 && radio.ch3_thr < 0.005f) // Arm
         {
-            if (radio.ch3_thr < 0.95) // ?
-            {
-                esc1.Update(radio.ch3_thr * 1000 + 1000);
-                esc2.Update(radio.ch3_thr * 1000 + 1000);
-                esc3.Update(radio.ch3_thr * 1000 + 1000);
-                esc4.Update(radio.ch3_thr * 1000 + 1000);
-            }
+            isArmed = true;
+        }
+
+        if (isArmed)
+        {
+            // PID
+            esc1.Update(radio.ch3_thr * 1000 + 1000);
+            esc2.Update(radio.ch3_thr * 1000 + 1000);
+            esc3.Update(radio.ch3_thr * 1000 + 1000);
+            esc4.Update(radio.ch3_thr * 1000 + 1000);
         }
 
         // int64_t workTime = esp_timer_get_time(); // [us]
