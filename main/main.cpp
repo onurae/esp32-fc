@@ -21,61 +21,9 @@
 #include "battery.hpp"
 #include "frsky.hpp"
 
-extern "C" void Task3(void *params)
+extern "C" void app_main(void)
 {
-    printf("Main loop led task has been started!\n");
-    size_t size = xPortGetFreeHeapSize();
-    printf("FreeHeapSize: ");
-    printf("%d\n", size);
-
-    Led *p = (Led *)params;
-    while (true)
-    {
-        vTaskDelay(pdMS_TO_TICKS(2));
-        p->Blink(1, 100, 2000);
-    }
-}
-
-extern "C" void Task2(void *params)
-{
-    printf("Telemetry task has been started!\n");
-    size_t size = xPortGetFreeHeapSize();
-    printf("FreeHeapSize: ");
-    printf("%d\n", size);
-
-    Battery battery;
-    battery.Init();
-    printf("Battery Voltage: %d\n", battery.GetVoltage());
-    Frsky frsky;
-    frsky.Init();
-    frsky.Flush();
-
-    int i = 0;
-    while (true)
-    {
-        vTaskDelay(pdMS_TO_TICKS(2));
-        i += 1;
-        if (i > 500) // Approximately 500*2 = 1 second.
-        {
-            i = 0;
-            int v = battery.GetVoltage(); // [mV]
-            if (v >= 0 && v < 15000)      // 3S lipo
-            {
-                frsky.SetVoltage(v / 1000.0f);
-            }
-            // Sometimes Tx shows an unexpected voltage value.
-            // If it happens, delete sensor and discover again.
-        }
-        frsky.Operate();
-    }
-}
-
-extern "C" void Task1(void *params)
-{
-    printf("Main task has been started!\n");
-    size_t size = xPortGetFreeHeapSize();
-    printf("FreeHeapSize: ");
-    printf("%d\n", size);
+    PrintCountDown("Starting in", 10);
 
     Led led; // On-board Led
     led.Init();
@@ -108,10 +56,17 @@ extern "C" void Task1(void *params)
         led.BlinkForever(); // Do not proceed.
     }
 
+    Battery battery;
+    battery.Init();
+    printf("Battery Voltage: %d\n", battery.GetVoltage());
+
     Sbus sbus;
     sbus.Init();
-    led.Blink(5, 100, 100); // Indicates connected.
+    Frsky frsky;
+    frsky.Init();
+    led.Blink(5, 100, 100); // Indicates receiver connection.
     led.TurnOn();
+
     Control contr(&sbus);
     contr.Init(freq);
 
@@ -139,20 +94,19 @@ extern "C" void Task1(void *params)
     led.Blink(5, 100, 100); // Indicates armed.
     // EscTest(&esc1, &esc2, &esc3, &esc4); // Do not proceed after test.
 
-    xTaskCreate(Task2, "TelemetryTask", 4096, NULL, 1, NULL);   // Low priority.
-    xTaskCreate(Task3, "MainLoopLedTask", 4096, &led, 0, NULL); // Very low priority.
-    Wait("Task initialization...", 1);                          // Task2 & Task3 initializing...
-    PrintCountDown("Entering loop in", 3);                      // Entering loop counter.
-    led.Blink(3, 150, 75);                                      // Indicates entering loop.
-    sbus.Flush();                                               // Clear sbus buffer.
-    sbus.WaitForData(2);                                        // Wait for first sbus data.
-    BaseType_t xWasDelayed;                                     // Deadline missed or not
-    float dt = 0;                                               // Time step
-    int64_t prevTime = 0;                                       // Previous time [us]
-    int64_t elapsedTime = 0;                                    // Elapsed time [us]
-    int64_t currentTime = esp_timer_get_time();                 // Current time [us]
-    const int loopTime = 1000 / freq;                           // Loop time [ms]
-    TickType_t xLastWakeTime = xTaskGetTickCount();             // Last wake time
+    PrintCountDown("Entering loop in", 3);          // Entering loop counter.
+    led.Blink(3, 150, 75);                          // Indicates entering loop.
+    int iFrsky = 0;                                 // Telemetry counter.
+    frsky.Flush();                                  // Clear telemetry buffer.
+    sbus.Flush();                                   // Clear sbus buffer.
+    sbus.WaitForData(2);                            // Wait for first sbus data.
+    BaseType_t xWasDelayed;                         // Deadline missed or not
+    float dt = 0;                                   // Time step
+    int64_t prevTime = 0;                           // Previous time [us]
+    int64_t elapsedTime = 0;                        // Elapsed time [us]
+    int64_t currentTime = esp_timer_get_time();     // Current time [us]
+    const int loopTime = 1000 / freq;               // Loop time [ms]
+    TickType_t xLastWakeTime = xTaskGetTickCount(); // Last wake time
     while (true)
     {
         xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(loopTime)); // Wait for the next cycle.
@@ -190,6 +144,10 @@ extern "C" void Task1(void *params)
         contr.UpdateRefInput(dt);
         // contr.PrintRef();
 
+        esc1.Update(1000);
+        esc2.Update(1000);
+        esc3.Update(1000);
+        esc4.Update(1000);
         /*
         if (radio.ch5_2po == 0) // Disarm
         {
@@ -215,17 +173,24 @@ extern "C" void Task1(void *params)
         }
         */
 
+        // Telemetry
+        iFrsky += 1;
+        if (iFrsky > freq) // Every 1 second.
+        {
+            iFrsky = 0;
+            int v = battery.GetVoltage(); // [mV]
+            if (v >= 0 && v < 15000)      // 3S lipo
+            {
+                // Sometimes Tx shows an unexpected voltage value.
+                // If it happens, delete sensor and discover again.
+                frsky.SetVoltage(v / 1000.0f);
+            }
+        }
+        frsky.Operate();
+
+        // Blink(1, 100, 2000);
+
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));
-    }
-}
-
-extern "C" void app_main(void)
-{
-    PrintCountDown("Starting in", 10);
-    xTaskCreate(Task1, "MainTask", 8192, NULL, 2, NULL); // High priority, periodic task.
-    while (true)                                         // is this necessary?
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
