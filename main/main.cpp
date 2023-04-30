@@ -58,11 +58,13 @@ extern "C" void Task2(void *params)
         if (i > 500) // Approximately 500*2 = 1 second.
         {
             i = 0;
-            int v = battery.GetVoltage(); // [mV] Sometimes it returns unexpected value. If happens, delete sensor and discover again.
+            int v = battery.GetVoltage(); // [mV]
             if (v >= 0 && v < 15000)      // 3S lipo
             {
                 frsky.SetVoltage(v / 1000.0f);
             }
+            // Sometimes Tx shows an unexpected voltage value.
+            // If it happens, delete sensor and discover again.
         }
         frsky.Operate();
     }
@@ -111,6 +113,7 @@ extern "C" void Task1(void *params)
     led.Blink(5, 100, 100); // Indicates connected.
     led.TurnOn();
     Control contr(&sbus);
+    contr.Init(freq);
 
     // ServoTimer servoTimer(0);
     // ServoOperator servoOperator1(&servoTimer);
@@ -141,6 +144,8 @@ extern "C" void Task1(void *params)
     Wait("Task initialization...", 1);                          // Task2 & Task3 initializing...
     PrintCountDown("Entering loop in", 3);                      // Entering loop counter.
     led.Blink(3, 150, 75);                                      // Indicates entering loop.
+    sbus.Flush();                                               // Clear sbus buffer.
+    sbus.WaitForData(2);                                        // Wait for first sbus data.
     BaseType_t xWasDelayed;                                     // Deadline missed or not
     float dt = 0;                                               // Time step
     int64_t prevTime = 0;                                       // Previous time [us]
@@ -181,7 +186,9 @@ extern "C" void Task1(void *params)
             // sbus.PrintTest();
             contr.UpdateControlInput();
         }
+        contr.CheckRxFailure();
         contr.UpdateRefInput(dt);
+        // contr.PrintRef();
 
         /*
         if (radio.ch5_2po == 0) // Disarm
