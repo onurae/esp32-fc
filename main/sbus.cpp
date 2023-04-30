@@ -108,9 +108,9 @@ Sbus::SbusData Sbus::GetData()
     return rxData;
 }
 
-float Sbus::MapRange(uint16_t value, float minOut, float maxOut, uint16_t minIn, uint16_t maxIn)
+float Sbus::MapRange(float value, float minOut, float maxOut, float minIn, float maxIn)
 {
-    uint16_t in = std::min(std::max(value, minIn), maxIn);
+    float in = std::min(std::max(value, minIn), maxIn);
     float out = (in - minIn) * (maxOut - minOut) / (maxIn - minIn) + minOut;
     return std::min(std::max(out, minOut), maxOut);
 }

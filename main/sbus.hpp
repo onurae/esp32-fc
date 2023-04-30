@@ -54,7 +54,7 @@ private:
     SbusData rxData = {};
     uint8_t k = 0;
     uint8_t prevData = footer;
-    float MapRange(uint16_t value, float minOut, float maxOut, uint16_t minIn = 192, uint16_t maxIn = 1792);
+    float MapRange(float value, float minOut, float maxOut, float minIn = 192.0f, float maxIn = 1792.0f);
     int64_t packetTime = 0; // [us]
 };
 
