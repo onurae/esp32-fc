@@ -38,6 +38,7 @@ public:
     int GetSwitch2Pos(uint16_t channel);
     int GetSwitch3Pos(uint16_t channel);
     bool CheckStatus(int timeout = 200); // [ms]
+    bool GetFailSafe();
     void PrintData();
     void PrintTest();
 
@@ -50,10 +51,10 @@ private:
     const uint8_t footer2 = 0x04;
     uint8_t buf[25];
     uint8_t rxBuf[25];
-    SbusData rxData;
+    SbusData rxData = {};
     uint8_t k = 0;
     uint8_t prevData = footer;
-    float MapRange(uint16_t value, float minOut, float maxOut, float minIn = 192.0f, float maxIn = 1792.0f);
+    float MapRange(uint16_t value, float minOut, float maxOut, uint16_t minIn = 192, uint16_t maxIn = 1792);
     int64_t packetTime = 0; // [us]
 };
 

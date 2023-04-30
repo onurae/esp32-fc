@@ -57,7 +57,7 @@ extern "C" void Task3(void *params)
         if (i > 500) // Approximately 500*2 = 1 second.
         {
             i = 0;
-            int v = battery.GetVoltage(); // Sometimes it returns unexpected value [mV]. TODO
+            int v = battery.GetVoltage(); // [mV] Sometimes it returns unexpected value. If happens, delete sensor and discover again.
             if (v >= 0 && v < 15000)      // 3S lipo
             {
                 frsky.SetVoltage(v / 1000.0f);
@@ -75,7 +75,6 @@ struct Radio
     float ch4_ail = 0;
     int ch5_2po = 0;
     int ch6_3po = -1;
-    bool status = false;
     bool ready = false;
 };
 
@@ -90,6 +89,7 @@ extern "C" void Task2(void *params)
     Sbus sbus;
     sbus.Init();
     p->ready = true;
+    bool failsafe = false;
     while (true)
     {
         vTaskDelay(pdMS_TO_TICKS(2));
@@ -97,8 +97,8 @@ extern "C" void Task2(void *params)
         {
             // sbus.PrintData();
             // sbus.PrintTest();
-            p->status = sbus.CheckStatus();
-            if (p->status == true)
+            failsafe = sbus.GetFailSafe();
+            if (failsafe == false)
             {
                 p->ch1_rud = sbus.GetAnalog(1, -1.0f, 1.0f);
                 p->ch2_ele = sbus.GetAnalog(2, -1.0f, 1.0f);
@@ -107,17 +107,19 @@ extern "C" void Task2(void *params)
                 p->ch5_2po = sbus.GetSwitch2Pos(5);
                 p->ch6_3po = sbus.GetSwitch3Pos(6);
             }
-            else // Radio failsafe values. Radio setting: Hold.
-            {
-                p->ch1_rud = 0;
-                p->ch2_ele = 0;
-                p->ch3_thr = 0;
-                p->ch4_ail = 0;
-                p->ch5_2po = 0;
-                p->ch6_3po = -1;
-            }
             // printf("ch1:%.1f, ch2:%.1f, ch3:%.1f, ch4:%.1f, ch5:%d, ch6:%d\n", p->ch1_rud, p->ch2_ele, p->ch3_thr, p->ch4_ail, p->ch5_2po, p->ch6_3po);
-            // printf("%d\n", p->status);
+            // printf("%d\n", failsafe);
+        }
+
+        // Receiver failure, Radio failsafe values. Radio setting: Hold.
+        if (sbus.CheckStatus() == false || failsafe == true)
+        {
+            p->ch1_rud = 0;
+            p->ch2_ele = 0;
+            p->ch3_thr = 0;
+            p->ch4_ail = 0;
+            p->ch5_2po = 0;
+            p->ch6_3po = -1;
         }
     }
 }

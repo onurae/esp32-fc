@@ -108,10 +108,11 @@ Sbus::SbusData Sbus::GetData()
     return rxData;
 }
 
-float Sbus::MapRange(uint16_t value, float minOut, float maxOut, float minIn, float maxIn)
+float Sbus::MapRange(uint16_t value, float minOut, float maxOut, uint16_t minIn, uint16_t maxIn)
 {
-    float out = (value - minIn) * (maxOut - minOut) / (maxIn - minIn) + minOut;
-    return std::min(std::max(out, minOut < maxOut ? minOut : maxOut), minOut > maxOut ? minOut : maxOut);
+    uint16_t in = std::min(std::max(value, minIn), maxIn);
+    float out = (in - minIn) * (maxOut - minOut) / (maxIn - minIn) + minOut;
+    return std::min(std::max(out, minOut), maxOut);
 }
 
 float Sbus::GetAnalog(uint16_t channel, float rangeMin, float rangeMax)
@@ -184,13 +185,18 @@ int Sbus::Write(const SbusData &txData)
 bool Sbus::CheckStatus(int timeout)
 {
     // If there is no or corrupted data for a while, it means there is a receiver or cable connection problem.
-    // If rxData.failsafe is true, there is no connection between Tx and Rx.
-    // Test Note: After the Tx is switched off, rxData.frameLost is true almost immediately and rxData.failSafe is true after 1 second.
-    if (rxData.failSafe == true || (esp_timer_get_time() - packetTime) > (timeout * 1000))
+    if ((esp_timer_get_time() - packetTime) > (timeout * 1000))
     {
         return false;
     }
     return true;
+}
+
+bool Sbus::GetFailSafe()
+{
+    // If rxData.failsafe is true, there is no connection between Tx and Rx.
+    // Test Note: After the Tx is switched off, rxData.frameLost is true almost immediately and rxData.failSafe is true after 1 second.
+    return rxData.failSafe;
 }
 
 void Sbus::PrintData()
