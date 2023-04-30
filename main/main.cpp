@@ -15,12 +15,13 @@
 #include "ahrs.hpp"
 #include "baro.hpp"
 #include "sbus.hpp"
+#include "control.hpp"
 #include "servo.hpp"
 #include "esc.hpp"
 #include "battery.hpp"
 #include "frsky.hpp"
 
-extern "C" void Task4(void *params)
+extern "C" void Task3(void *params)
 {
     printf("Main loop led task has been started!\n");
     size_t size = xPortGetFreeHeapSize();
@@ -35,7 +36,7 @@ extern "C" void Task4(void *params)
     }
 }
 
-extern "C" void Task3(void *params)
+extern "C" void Task2(void *params)
 {
     printf("Telemetry task has been started!\n");
     size_t size = xPortGetFreeHeapSize();
@@ -64,63 +65,6 @@ extern "C" void Task3(void *params)
             }
         }
         frsky.Operate();
-    }
-}
-
-struct Radio
-{
-    float ch1_rud = 0;
-    float ch2_ele = 0;
-    float ch3_thr = 0;
-    float ch4_ail = 0;
-    int ch5_2po = 0;
-    int ch6_3po = -1;
-    bool ready = false;
-};
-
-extern "C" void Task2(void *params)
-{
-    printf("Radio task has been started!\n");
-    size_t size = xPortGetFreeHeapSize();
-    printf("FreeHeapSize: ");
-    printf("%d\n", size);
-
-    Radio *p = (Radio *)params;
-    Sbus sbus;
-    sbus.Init();
-    p->ready = true;
-    bool failsafe = false;
-    while (true)
-    {
-        vTaskDelay(pdMS_TO_TICKS(2));
-        if (sbus.Read())
-        {
-            // sbus.PrintData();
-            // sbus.PrintTest();
-            failsafe = sbus.GetFailSafe();
-            if (failsafe == false)
-            {
-                p->ch1_rud = sbus.GetAnalog(1, -1.0f, 1.0f);
-                p->ch2_ele = sbus.GetAnalog(2, -1.0f, 1.0f);
-                p->ch3_thr = sbus.GetAnalog(3, 0.0f, 0.95f); // There is an esc problem at full throttle. 1.0 -> 0.95. TODO
-                p->ch4_ail = sbus.GetAnalog(4, -1.0f, 1.0f);
-                p->ch5_2po = sbus.GetSwitch2Pos(5);
-                p->ch6_3po = sbus.GetSwitch3Pos(6);
-            }
-            // printf("ch1:%.1f, ch2:%.1f, ch3:%.1f, ch4:%.1f, ch5:%d, ch6:%d\n", p->ch1_rud, p->ch2_ele, p->ch3_thr, p->ch4_ail, p->ch5_2po, p->ch6_3po);
-            // printf("%d\n", failsafe);
-        }
-
-        // Receiver failure, Radio failsafe values. Radio setting: Hold.
-        if (sbus.CheckStatus() == false || failsafe == true)
-        {
-            p->ch1_rud = 0;
-            p->ch2_ele = 0;
-            p->ch3_thr = 0;
-            p->ch4_ail = 0;
-            p->ch5_2po = 0;
-            p->ch6_3po = -1;
-        }
     }
 }
 
@@ -162,15 +106,11 @@ extern "C" void Task1(void *params)
         led.BlinkForever(); // Do not proceed.
     }
 
-    Radio radio;
-    xTaskCreate(Task2, "RadioTask", 4096, &radio, 2, NULL);
-    while (radio.ready == false)
-    {
-        Wait("Radio", 1);
-        led.Flip();
-    }
+    Sbus sbus;
+    sbus.Init();
     led.Blink(5, 100, 100); // Indicates connected.
     led.TurnOn();
+    Control contr(&sbus);
 
     // ServoTimer servoTimer(0);
     // ServoOperator servoOperator1(&servoTimer);
@@ -196,9 +136,9 @@ extern "C" void Task1(void *params)
     led.Blink(5, 100, 100); // Indicates armed.
     // EscTest(&esc1, &esc2, &esc3, &esc4); // Do not proceed after test.
 
-    xTaskCreate(Task3, "TelemetryTask", 4096, NULL, 1, NULL);   // Low priority.
-    xTaskCreate(Task4, "MainLoopLedTask", 4096, &led, 0, NULL); // Very low priority.
-    Wait("Task initialization...", 1);                          // Task3 & Task4 initializing...
+    xTaskCreate(Task2, "TelemetryTask", 4096, NULL, 1, NULL);   // Low priority.
+    xTaskCreate(Task3, "MainLoopLedTask", 4096, &led, 0, NULL); // Very low priority.
+    Wait("Task initialization...", 1);                          // Task2 & Task3 initializing...
     PrintCountDown("Entering loop in", 3);                      // Entering loop counter.
     led.Blink(3, 150, 75);                                      // Indicates entering loop.
     BaseType_t xWasDelayed;                                     // Deadline missed or not
@@ -232,9 +172,18 @@ extern "C" void Task1(void *params)
         // ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        baro.Update(dt);
+        // baro.Update(dt);
         // baro.PrintAltVs();
 
+        if (sbus.Read())
+        {
+            // sbus.PrintData();
+            // sbus.PrintTest();
+            contr.UpdateControlInput();
+        }
+        contr.UpdateRefInput(dt);
+
+        /*
         if (radio.ch5_2po == 0) // Disarm
         {
             isArmed = false;
@@ -257,6 +206,7 @@ extern "C" void Task1(void *params)
             esc3.Update(radio.ch3_thr * 1000 + 1000);
             esc4.Update(radio.ch3_thr * 1000 + 1000);
         }
+        */
 
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));
@@ -266,7 +216,7 @@ extern "C" void Task1(void *params)
 extern "C" void app_main(void)
 {
     PrintCountDown("Starting in", 10);
-    xTaskCreate(Task1, "MainTask", 4096, NULL, 3, NULL); // High priority, periodic task.
+    xTaskCreate(Task1, "MainTask", 8192, NULL, 2, NULL); // High priority, periodic task.
     while (true)                                         // is this necessary?
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
