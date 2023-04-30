@@ -32,12 +32,17 @@ void Sbus::Init()
 
     printf("SBUS initialization...\n");
     uint8_t period = 7;                            // [ms]
-    vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait for data.
+    vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait.
+    WaitForData(1000);                             // [ms]
+    printf("SBUS ready.\n");
+}
+
+void Sbus::WaitForData(int interval)
+{
     while (!Read())
     {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(interval / portTICK_PERIOD_MS);
     }
-    printf("SBUS ready.\n");
 }
 
 void Sbus::Flush()

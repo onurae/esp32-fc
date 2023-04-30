@@ -32,6 +32,7 @@ public:
     void Init();
     void Flush();
     bool Read();
+    void WaitForData(int interval); // [ms]
     int Write(const SbusData &txData);
     SbusData GetData();
     float GetAnalog(uint16_t channel, float rangeMin, float rangeMax);
