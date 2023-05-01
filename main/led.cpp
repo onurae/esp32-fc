@@ -14,6 +14,8 @@ void Led::Init()
 {
     gpio_set_direction(led, GPIO_MODE_OUTPUT);
     TurnOff();
+    currentTime = esp_timer_get_time(); // [us]
+    prevTime = currentTime;             // [us]
 }
 
 void Led::Blink(int numBlinks, int onTime, int offTime)
@@ -57,4 +59,23 @@ void Led::TurnOff()
 void Led::Flip()
 {
     state ? TurnOff() : TurnOn();
+}
+
+void Led::BlinkLoop(int onTime, int offTime)
+{
+    currentTime = esp_timer_get_time(); // [us]
+    if (currentTime - prevTime > delay * 1000)
+    {
+        prevTime = esp_timer_get_time(); // [us]
+        if (state == false)
+        {
+            TurnOn();
+            delay = onTime; // [ms]
+        }
+        else
+        {
+            TurnOff();
+            delay = offTime; // [ms]
+        }
+    }
 }

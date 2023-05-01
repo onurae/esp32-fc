@@ -14,6 +14,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "esp_timer.h"
 
 class Led
 {
@@ -31,6 +32,11 @@ public:
     void TurnOn();
     void TurnOff();
     void Flip();
+
+    int64_t currentTime = 0;                 // Current time [us]
+    int64_t prevTime = 0;                    // Previous time [us]
+    int64_t delay = 0;                       // Delay [us]
+    void BlinkLoop(int onTime, int offTime); // [ms]
 };
 
 #endif /* LED_HPP */
