@@ -10,13 +10,17 @@
 
 #include "control.hpp"
 
-void Control::Init(uint16_t freq)
+void Control::Init(uint16_t freq, Esc *esc1, Esc *esc2, Esc *esc3, Esc *esc4)
 {
     // Disable ref filter if the frequency is below 100Hz.
     if (freq < 100)
     {
         fCutRef = -1;
     }
+    this->esc1 = esc1;
+    this->esc2 = esc2;
+    this->esc3 = esc3;
+    this->esc4 = esc4;
 }
 
 void Control::UpdateControlInput()
@@ -26,7 +30,7 @@ void Control::UpdateControlInput()
     {
         ch1_rud = sbus->GetAnalog(1, -1.0f, 1.0f);
         ch2_ele = sbus->GetAnalog(2, -1.0f, 1.0f);
-        ch3_thr = sbus->GetAnalog(3, 0.0f, 0.95f); // There is an esc problem at full throttle. 1.0 -> 0.95. TODO
+        ch3_thr = sbus->GetAnalog(3, 0.0f, 1.0f);
         ch4_ail = sbus->GetAnalog(4, -1.0f, 1.0f);
         ch5_2po = sbus->GetSwitch2Pos(5);
         ch6_3po = sbus->GetSwitch3Pos(6);
@@ -92,4 +96,43 @@ void Control::PrintRef()
 {
     printf("%.1f, %.1f, %.2f, %.1f\n ", rRef, thetaRef, thrRef, phiRef);
     // printf("%.3f, %.3f\n", ch1_rud, ch1f);
+}
+
+void Control::Arming()
+{
+    if (ch5_2po == 0) // Disarm
+    {
+        isArmed = false;
+        esc1->Update(1000);
+        esc2->Update(1000);
+        esc3->Update(1000);
+        esc4->Update(1000);
+        // reset pid etc.. TODO
+    }
+    else if (ch5_2po == 1 && thrRef < 0.005f) // Arm
+    {
+        isArmed = true;
+    }
+}
+
+void Control::UpdateEscCmd()
+{
+    Arming();
+    if (isArmed)
+    {
+        // TODO mixing equation
+        float m1 = ((kRoll * rollOut + kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
+        float m2 = ((-kRoll * rollOut + kPitch * pitchOut + yawOut) / 2.0 * thrRef + thrRef);
+        float m3 = ((-kRoll * rollOut - kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
+        float m4 = ((kRoll * rollOut - kPitch * pitchOut + yawOut) / 2.0 * thrRef + thrRef);
+        esc1->Update((uint16_t)std::round(Saturation(m1 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc2->Update((uint16_t)std::round(Saturation(m2 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc3->Update((uint16_t)std::round(Saturation(m3 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc4->Update((uint16_t)std::round(Saturation(m4 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+    }
+}
+
+float Control::Saturation(float value, float min, float max)
+{
+    return std::min(std::max(value, min), max);
 }

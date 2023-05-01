@@ -15,6 +15,7 @@
 #include "freertos/task.h"
 #include <cmath>
 #include "sbus.hpp"
+#include "esc.hpp"
 
 class Control
 {
@@ -32,7 +33,7 @@ private:
     int ch5_2po = 0;
     int ch6_3po = -1;
 
-    // Filter
+    // Filters
     float ch1f = 0;
     float ch2f = 0;
     float ch3f = 0;
@@ -55,18 +56,40 @@ private:
     float thrRef = 0;   // Throttle
     float phiRef = 0;   // Roll angle
 
-    // Motors
-    float m[4];
+    // Attitude control
+
+    float rollOut = 0;
+    float pitchOut = 0;
+    float yawOut = 0;
+
+    // Mixer
+    // 1 CW   2 CCW
+    // 4 CCW  3 CW
+    float kRoll = 10.10f / 10.10f; // 1-2: 20.2 cm, 1-RollAxis: 10.10 cm.
+    float kPitch = 7.75f / 10.10f; // 1-4: 15.5 cm, 1-PitchAxis: 7.75 cm.
+    float pwmIdle = 1000.0f;
+    float pwmMax = 1950.0f; // There is an esc problem at full throttle. 1.0 -> 0.95.
+    float pwmRange = pwmMax - pwmIdle;
+    float Saturation(float value, float min, float max);
+
+    // Esc
+    bool isArmed = false;
+    void Arming();
+    Esc *esc1;
+    Esc *esc2;
+    Esc *esc3;
+    Esc *esc4;
 
 public:
     Control(Sbus *sbus) { this->sbus = sbus; }
     virtual ~Control() = default;
 
-    void Init(uint16_t freq);
+    void Init(uint16_t freq, Esc* esc1, Esc* esc2, Esc* esc3, Esc* esc4);
     void UpdateControlInput();
     void CheckRxFailure();
     void UpdateRefInput(float dt);
     void PrintRef();
+    void UpdateEscCmd();
 };
 
 #endif /* CONTROL_HPP */
