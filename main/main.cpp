@@ -67,9 +67,6 @@ extern "C" void app_main(void)
     led.Blink(5, 100, 100); // Indicates receiver connection.
     led.TurnOn();
 
-    Control contr(&sbus);
-    contr.Init(freq);
-
     // ServoTimer servoTimer(0);
     // ServoOperator servoOperator1(&servoTimer);
     // Servo servo1(&servoOperator1, GPIO_NUM_27, 1000, 2000, -45, +45, 1200);
@@ -86,13 +83,15 @@ extern "C" void app_main(void)
     Esc esc1(&escOperator1, GPIO_NUM_33);
     Esc esc2(&escOperator1, GPIO_NUM_27);
     EscOperator escOperator2(&escTimer);
-    Esc esc3(&escOperator2, GPIO_NUM_25);
-    Esc esc4(&escOperator2, GPIO_NUM_26);
+    Esc esc3(&escOperator2, GPIO_NUM_26);
+    Esc esc4(&escOperator2, GPIO_NUM_25);
     escTimer.EnableAndStartTimer();
     Wait("Esc arming...", 3);
-    bool isArmed = true;
     led.Blink(5, 100, 100); // Indicates armed.
     // EscTest(&esc1, &esc2, &esc3, &esc4); // Do not proceed after test.
+
+    Control contr(&sbus);
+    contr.Init(freq, &esc1, &esc2, &esc3, &esc4);
 
     PrintCountDown("Entering loop in", 3);          // Entering loop counter.
     led.Blink(3, 150, 75);                          // Indicates entering loop.
@@ -143,35 +142,7 @@ extern "C" void app_main(void)
         contr.CheckRxFailure();
         contr.UpdateRefInput(dt);
         // contr.PrintRef();
-
-        esc1.Update(1000);
-        esc2.Update(1000);
-        esc3.Update(1000);
-        esc4.Update(1000);
-        /*
-        if (radio.ch5_2po == 0) // Disarm
-        {
-            isArmed = false;
-            esc1.Update(1000);
-            esc2.Update(1000);
-            esc3.Update(1000);
-            esc4.Update(1000);
-            // reset pid etc..
-        }
-        else if (radio.ch5_2po == 1 && radio.ch3_thr < 0.005f) // Arm
-        {
-            isArmed = true;
-        }
-
-        if (isArmed)
-        {
-            // PID
-            esc1.Update(radio.ch3_thr * 1000 + 1000);
-            esc2.Update(radio.ch3_thr * 1000 + 1000);
-            esc3.Update(radio.ch3_thr * 1000 + 1000);
-            esc4.Update(radio.ch3_thr * 1000 + 1000);
-        }
-        */
+        contr.UpdateEscCmd();
 
         // Telemetry
         iFrsky += 1;
@@ -188,7 +159,8 @@ extern "C" void app_main(void)
         }
         frsky.Operate();
 
-        // Blink(1, 100, 2000);
+        // Loop Led
+        led.BlinkLoop(100, 2000);
 
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));
