@@ -126,9 +126,9 @@ public:
     void Update(float dt);
 
     // Rates & Angles
-    float GetP() { return gxf; }
-    float GetQ() { return gyf; }
-    float GetR() { return gzf; }
+    float GetP() { return DegToRad(gxf); }
+    float GetQ() { return DegToRad(-gyf); }
+    float GetR() { return DegToRad(-gzf); }
     float GetPhi() { return phi; }
     float GetTheta() { return theta; }
     float GetPsi() { return psi; }
