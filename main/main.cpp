@@ -117,6 +117,7 @@ extern "C" void app_main(void)
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
+            // if 5 deadline accur, change led on-time. TODO
         }
 
         ahrs.Update(dt);
@@ -141,6 +142,7 @@ extern "C" void app_main(void)
         }
         contr.CheckRxFailure();
         contr.UpdateRefInput(dt);
+        contr.Feedback(ahrs.GetP(), ahrs.GetQ(), ahrs.GetR());
         // contr.PrintRef();
         contr.UpdateEscCmd();
 

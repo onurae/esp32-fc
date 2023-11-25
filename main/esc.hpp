@@ -39,6 +39,10 @@ public:
         ESP_ERROR_CHECK(mcpwm_timer_enable(timer));
         ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
     }
+    void StopTimer()
+    {
+        mcpwm_timer_start_stop(timer, MCPWM_TIMER_STOP_EMPTY); // Not tested.
+    }
 };
 
 class EscOperator

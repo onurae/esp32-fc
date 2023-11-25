@@ -120,7 +120,6 @@ void Control::UpdateEscCmd()
     Arming();
     if (isArmed)
     {
-        // TODO mixing equation
         float m1 = ((kRoll * rollOut + kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
         float m2 = ((-kRoll * rollOut + kPitch * pitchOut + yawOut) / 2.0 * thrRef + thrRef);
         float m3 = ((-kRoll * rollOut - kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
@@ -135,4 +134,12 @@ void Control::UpdateEscCmd()
 float Control::Saturation(float value, float min, float max)
 {
     return std::min(std::max(value, min), max);
+}
+
+void Control::Feedback(float p, float q, float r)
+{
+    rollOut = p * -30.0;
+    pitchOut = q * -30.0;
+    yawOut = r * -30.0;
+    thrRef = ch3f;
 }

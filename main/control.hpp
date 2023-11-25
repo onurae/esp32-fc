@@ -57,7 +57,6 @@ private:
     float phiRef = 0;   // Roll angle
 
     // Attitude control
-
     float rollOut = 0;
     float pitchOut = 0;
     float yawOut = 0;
@@ -65,8 +64,8 @@ private:
     // Mixer
     // 1 CW   2 CCW
     // 4 CCW  3 CW
-    float kRoll = 10.10f / 10.10f; // 1-2: 20.2 cm, 1-RollAxis: 10.10 cm.
-    float kPitch = 7.75f / 10.10f; // 1-4: 15.5 cm, 1-PitchAxis: 7.75 cm.
+    float kRoll = 7.75 / 10.10 * (0.001467 / 0.001867); 	// 1-2: 20.2 cm, 1-RollAxis: 10.10 cm. (inertia ratio: Ixx/Iyy)
+    float kPitch = 1.0f; 									// 1-4: 15.5 cm, 1-PitchAxis: 7.75 cm.
     float pwmIdle = 1000.0f;
     float pwmMax = 1950.0f; // There is an esc problem at full throttle. 1.0 -> 0.95.
     float pwmRange = pwmMax - pwmIdle;
@@ -89,6 +88,7 @@ public:
     void CheckRxFailure();
     void UpdateRefInput(float dt);
     void PrintRef();
+    void Feedback(float p, float q, float r);
     void UpdateEscCmd();
 };
 
