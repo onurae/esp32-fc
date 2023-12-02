@@ -16,6 +16,7 @@
 #include <cmath>
 #include "sbus.hpp"
 #include "esc.hpp"
+#include "util.hpp"
 
 class Control
 {
@@ -46,20 +47,45 @@ private:
     float ch4fp = 0;
 
     // Max. parameters
-    const float maxRollAngle = 30;  // [deg]
-    const float maxPitchAngle = 30; // [deg]
-    const float maxYawRate = 160;   // [deg/s]
-
-    // Reference values
-    float rRef = 0;     // Yaw rate
-    float thetaRef = 0; // Pitch angle
-    float thrRef = 0;   // Throttle
-    float phiRef = 0;   // Roll angle
+    const float maxRollAngle = DegToRad(30);  // [rad]
+    const float maxPitchAngle = DegToRad(30); // [rad]
+    const float maxYawRate = DegToRad(160);   // [rad/s]
 
     // Attitude control
-    float rollOut = 0;
-    float pitchOut = 0;
-    float yawOut = 0;
+    float threshold = 0.01; // Throttle threshold for integral reset.
+    float xiRoll_OL = 0;    // Outer loop roll integral output.
+    float xiRoll_OLp = 0;   // Outer loop roll integral previous output.
+    float xiPitch_OL = 0;   // Outer loop pitch integral output.
+    float xiPitch_OLp = 0;  // Outer loop pitch integral previous output.
+    float xiRoll_IL = 0;    // Inner loop roll integral output.
+    float xiRoll_ILp = 0;   // Inner loop roll integral previous output.
+    float xiPitch_IL = 0;   // Inner loop pitch integral output.
+    float xiPitch_ILp = 0;  // Inner loop pitch integral previous output.
+    float xiYaw_IL = 0;     // Inner loop yaw integral output.
+    float xiYaw_ILp = 0;    // Inner loop yaw integral previous output.
+
+    float phiRef = 0;   // Roll angle reference [rad]
+    float thetaRef = 0; // Pitch angle reference [rad]
+    float pRef = 0;     // Roll rate reference [rad/s]
+    float qRef = 0;     // Pitch rate reference [rad/s]
+    float rRef = 0;     // Yaw rate reference [rad/s]
+
+    float lat = 0;      // Lateral
+    float lon = 0;      // Longitudinal
+    float pedal = 0;    // Pedal 
+    float thr = 0;      // Throttle
+
+    // Gains, OL: Outer loop, IL: Inner loop
+    float kiRoll_OL = 0;
+    float ksRoll_OL = 0;
+    float kiRoll_IL = 0;
+    float ksRoll_IL = 30;
+    float kiPitch_OL = 0;
+    float ksPitch_OL = 30;
+    float kiPitch_IL = 0;
+    float ksPitch_IL = 0;
+    float kiYaw_IL = 0;
+    float ksYaw_IL = 30;
 
     // Mixer
     // 1 CW   2 CCW
@@ -88,8 +114,7 @@ public:
     void CheckRxFailure();
     void UpdateRefInput(float dt);
     void PrintRef();
-    void Feedback(float p, float q, float r);
-    void UpdateEscCmd();
+    void UpdateEscCmd(float dt, float p, float q, float r, float phi, float theta, float psi);
 };
 
 #endif /* CONTROL_HPP */

@@ -17,7 +17,6 @@
 
 #include "i2c.hpp"
 #include "util.hpp"
-#include <cmath>
 #include "esp_timer.h"
 
 class Ahrs
@@ -109,15 +108,13 @@ private:
     float q1 = 0.0;
     float q2 = 0.0;
     float q3 = 0.0;
-    float DegToRad(float deg);
-    float RadToDeg(float rad);
     float InvSqrt(float x);
     void Madgwick9(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float dt);
     void Madgwick6(float gx, float gy, float gz, float ax, float ay, float az, float dt);
     void CalculateEulerAngles();
-    float phi;   // Roll
-    float theta; // Pitch
-    float psi;   // Yaw
+    float phi;   // Roll [rad]
+    float theta; // Pitch [rad]
+    float psi;   // Yaw [rad]
 
 public:
     Ahrs(I2c *i2c) { this->i2c = i2c; }

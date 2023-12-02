@@ -366,16 +366,6 @@ void Ahrs::PrintMagBiasScale()
     WaitForever();
 }
 
-float Ahrs::DegToRad(float deg)
-{
-    return deg / 180.0f * M_PI;
-}
-
-float Ahrs::RadToDeg(float rad)
-{
-    return rad / M_PI * 180.0f;
-}
-
 void Ahrs::Madgwick9(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float dt)
 {
     float recipNorm;
@@ -564,17 +554,17 @@ float Ahrs::InvSqrt(float x)
 
 void Ahrs::CalculateEulerAngles()
 {
-    phi = RadToDeg(std::atan2(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2 * q2));
+    phi = std::atan2(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2 * q2);
     double sinTheta = 2.0f * (q0 * q2 - q1 * q3);
     if (std::abs(sinTheta) >= 1)
     {
-        theta = RadToDeg(std::copysign(M_PI / 2.0f, sinTheta));
+        theta = std::copysign(M_PI / 2.0f, sinTheta);
     }
     else
     {
-        theta = RadToDeg(std::asin(sinTheta));
+        theta = std::asin(sinTheta);
     }
-    psi = RadToDeg(std::atan2(q0 * q3 + q1 * q2, 0.5f - q2 * q2 - q3 * q3));
+    psi = std::atan2(q0 * q3 + q1 * q2, 0.5f - q2 * q2 - q3 * q3);
 }
 
 void Ahrs::PrintQuaternions()
@@ -584,7 +574,7 @@ void Ahrs::PrintQuaternions()
 
 void Ahrs::PrintEulerAngles()
 {
-    printf("%s%.1f, %s%.1f, %s%.1f\n", "phi: ", phi, "theta: ", theta, "psi: ", psi);
+    printf("%s%.1f, %s%.1f, %s%.1f\n", "phi: ", RadToDeg(phi), "theta: ", RadToDeg(theta), "psi: ", RadToDeg(psi));
 }
 
 void Ahrs::Converge(uint16_t freq)

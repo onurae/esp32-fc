@@ -54,3 +54,13 @@ float LinearScaledDeadband(float value, float deadbandCutoff)
         return (value - (std::abs(value) / value) * deadbandCutoff) / (1.0 - deadbandCutoff);
     }
 }
+
+float DegToRad(float deg)
+{
+    return deg / 180.0f * M_PI;
+}
+
+float RadToDeg(float rad)
+{
+    return rad / M_PI * 180.0f;
+}

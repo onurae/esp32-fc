@@ -88,13 +88,13 @@ void Control::UpdateRefInput(float dt)
 
     rRef = ch1f * maxYawRate;
     thetaRef = ch2f * maxPitchAngle;
-    thrRef = ch3f;
+    thr = ch3f;
     phiRef = ch4f * maxRollAngle;
 }
 
 void Control::PrintRef()
 {
-    printf("%.1f, %.1f, %.2f, %.1f\n ", rRef, thetaRef, thrRef, phiRef);
+    printf("%.1f, %.1f, %.2f, %.1f\n ", rRef, thetaRef, thr, phiRef);
     // printf("%.3f, %.3f\n", ch1_rud, ch1f);
 }
 
@@ -103,31 +103,10 @@ void Control::Arming()
     if (ch5_2po == 0) // Disarm
     {
         isArmed = false;
-        esc1->Update(1000);
-        esc2->Update(1000);
-        esc3->Update(1000);
-        esc4->Update(1000);
-        // reset pid etc.. TODO
     }
-    else if (ch5_2po == 1 && thrRef < 0.005f) // Arm
+    else if (ch5_2po == 1 && thr < 0.005f) // Arm
     {
         isArmed = true;
-    }
-}
-
-void Control::UpdateEscCmd()
-{
-    Arming();
-    if (isArmed)
-    {
-        float m1 = ((kRoll * rollOut + kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
-        float m2 = ((-kRoll * rollOut + kPitch * pitchOut + yawOut) / 2.0 * thrRef + thrRef);
-        float m3 = ((-kRoll * rollOut - kPitch * pitchOut - yawOut) / 2.0 * thrRef + thrRef);
-        float m4 = ((kRoll * rollOut - kPitch * pitchOut + yawOut) / 2.0 * thrRef + thrRef);
-        esc1->Update((uint16_t)std::round(Saturation(m1 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
-        esc2->Update((uint16_t)std::round(Saturation(m2 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
-        esc3->Update((uint16_t)std::round(Saturation(m3 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
-        esc4->Update((uint16_t)std::round(Saturation(m4 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
     }
 }
 
@@ -136,10 +115,60 @@ float Control::Saturation(float value, float min, float max)
     return std::min(std::max(value, min), max);
 }
 
-void Control::Feedback(float p, float q, float r)
+void Control::UpdateEscCmd(float dt, float p, float q, float r, float phi, float theta, float psi)
 {
-    rollOut = p * -30.0;
-    pitchOut = q * -30.0;
-    yawOut = r * -30.0;
-    thrRef = ch3f;
+    Arming();
+    if (isArmed)
+    {
+        // Roll channel
+        xiRoll_OL = xiRoll_OLp + (phiRef - phi) * dt;
+        if (thr < threshold) { xiRoll_OL = 0; }
+        pRef = (kiRoll_OL * xiRoll_OL - phi) * ksRoll_OL;
+
+        xiRoll_IL = xiRoll_ILp + (pRef - p) * dt;
+        if (thr < threshold) { xiRoll_IL = 0; }
+        lat = (kiRoll_IL * xiRoll_IL - p) * ksRoll_IL;
+
+        // Pitch channel
+        xiPitch_OL = xiPitch_OLp + (thetaRef - theta) * dt;
+        if (thr < threshold) { xiPitch_OL = 0; }
+        qRef = (kiPitch_OL * xiPitch_OL - theta) * ksPitch_OL;
+
+        xiPitch_IL = xiPitch_ILp + (qRef - q) * dt;
+        if (thr < threshold) { xiPitch_IL = 0; }
+        lon = (kiPitch_IL * xiPitch_IL - q) * ksPitch_IL;
+
+        // Yaw channel
+        xiYaw_IL = xiYaw_ILp + (rRef - r) * dt;
+        if (thr < threshold) { xiYaw_IL = 0; }
+        pedal = (kiYaw_IL * xiYaw_IL - r) * ksYaw_IL;
+
+        float m1 = ((kRoll * lat + kPitch * lon - pedal) / 2.0 * thr + thr);
+        float m2 = ((-kRoll * lat + kPitch * lon + pedal) / 2.0 * thr + thr);
+        float m3 = ((-kRoll * lat - kPitch * lon - pedal) / 2.0 * thr + thr);
+        float m4 = ((kRoll * lat - kPitch * lon + pedal) / 2.0 * thr + thr);
+        esc1->Update((uint16_t)std::round(Saturation(m1 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc2->Update((uint16_t)std::round(Saturation(m2 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc3->Update((uint16_t)std::round(Saturation(m3 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+        esc4->Update((uint16_t)std::round(Saturation(m4 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
+    }
+    else
+    {
+        xiRoll_OL = 0;
+        xiPitch_OL = 0;
+        xiRoll_IL = 0;
+        xiPitch_IL = 0;
+        xiYaw_IL = 0;
+        esc1->Update(1000);
+        esc2->Update(1000);
+        esc3->Update(1000);
+        esc4->Update(1000);
+    }
+
+    // Set previous state values.
+    xiRoll_OLp = xiRoll_OL;
+    xiPitch_OLp = xiPitch_OL;
+    xiRoll_ILp = xiRoll_IL;
+    xiPitch_ILp = xiPitch_IL;
+    xiYaw_ILp = xiYaw_IL;
 }
