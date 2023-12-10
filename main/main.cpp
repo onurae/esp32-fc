@@ -143,7 +143,9 @@ extern "C" void app_main(void)
         contr.CheckRxFailure();
         contr.UpdateRefInput(dt);
         // contr.PrintRef();
-        contr.UpdateEscCmd(dt, ahrs.GetP(), ahrs.GetQ(), ahrs.GetR(), ahrs.GetPhi(), ahrs.GetTheta(), ahrs.GetPsi());
+        contr.UpdateEscCmd(dt,
+            ahrs.GetP(), ahrs.GetQ(), ahrs.GetR(),
+            ahrs.GetPhi(), ahrs.GetTheta(), ahrs.GetPsi());
 
         // Telemetry
         iFrsky += 1;

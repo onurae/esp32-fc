@@ -52,40 +52,33 @@ private:
     const float maxYawRate = DegToRad(160);   // [rad/s]
 
     // Attitude control
-    float threshold = 0.01; // Throttle threshold for integral reset.
-    float xiRoll_OL = 0;    // Outer loop roll integral output.
-    float xiRoll_OLp = 0;   // Outer loop roll integral previous output.
-    float xiPitch_OL = 0;   // Outer loop pitch integral output.
-    float xiPitch_OLp = 0;  // Outer loop pitch integral previous output.
-    float xiRoll_IL = 0;    // Inner loop roll integral output.
-    float xiRoll_ILp = 0;   // Inner loop roll integral previous output.
-    float xiPitch_IL = 0;   // Inner loop pitch integral output.
-    float xiPitch_ILp = 0;  // Inner loop pitch integral previous output.
-    float xiYaw_IL = 0;     // Inner loop yaw integral output.
-    float xiYaw_ILp = 0;    // Inner loop yaw integral previous output.
+    float threshold = 0.20;     // Throttle threshold for integral reset.
+    float iLimit = 0.1;         // Integral limit.
+    float xiRollAngle = 0;      // Roll angle integral output.
+    float xiRollAnglePrev = 0;  // Roll angle integral previous output.
+    float xiPitchAngle = 0;     // Pitch angle integral output.
+    float xiPitchAnglePrev = 0; // Pitch angle integral previous output.
+    float xiYawRate = 0;        // Yaw rate integral output.
+    float xiYawRatePrev = 0;    // Yaw rate integral previous output.
 
     float phiRef = 0;   // Roll angle reference [rad]
     float thetaRef = 0; // Pitch angle reference [rad]
-    float pRef = 0;     // Roll rate reference [rad/s]
-    float qRef = 0;     // Pitch rate reference [rad/s]
     float rRef = 0;     // Yaw rate reference [rad/s]
 
     float lat = 0;      // Lateral
     float lon = 0;      // Longitudinal
-    float pedal = 0;    // Pedal 
+    float pedal = 0;    // Pedal
     float thr = 0;      // Throttle
 
-    // Gains, OL: Outer loop, IL: Inner loop
-    float kiRoll_OL = 0;
-    float ksRoll_OL = 0;
-    float kiRoll_IL = 0;
-    float ksRoll_IL = 30;
-    float kiPitch_OL = 0;
-    float ksPitch_OL = 30;
-    float kiPitch_IL = 0;
-    float ksPitch_IL = 0;
-    float kiYaw_IL = 0;
-    float ksYaw_IL = 30;
+    // Gains
+    float kiRollAngle = 7.07;
+    float ksRollAngle = 2.65;
+    float ksRollRate = 0.48;
+    float kiPitchAngle = 7.07;
+    float ksPitchAngle = 2.65;
+    float ksPitchRate = 0.48;
+    float kiYawRate = 7.07;
+    float ksYawRate = 3.21;
 
     // Mixer
     // 1 CW   2 CCW

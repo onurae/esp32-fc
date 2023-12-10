@@ -87,7 +87,7 @@ void Control::UpdateRefInput(float dt)
     ch4fp = ch4f;
 
     rRef = ch1f * maxYawRate;
-    thetaRef = ch2f * maxPitchAngle;
+    thetaRef = -1.0 * ch2f * maxPitchAngle; // Revert theta reference.
     thr = ch3f;
     phiRef = ch4f * maxRollAngle;
 }
@@ -121,27 +121,22 @@ void Control::UpdateEscCmd(float dt, float p, float q, float r, float phi, float
     if (isArmed)
     {
         // Roll channel
-        xiRoll_OL = xiRoll_OLp + (phiRef - phi) * dt;
-        if (thr < threshold) { xiRoll_OL = 0; }
-        pRef = (kiRoll_OL * xiRoll_OL - phi) * ksRoll_OL;
-
-        xiRoll_IL = xiRoll_ILp + (pRef - p) * dt;
-        if (thr < threshold) { xiRoll_IL = 0; }
-        lat = (kiRoll_IL * xiRoll_IL - p) * ksRoll_IL;
+        xiRollAngle = xiRollAnglePrev + (phiRef - phi) * dt;
+        if (thr < threshold) { xiRollAngle = 0; }
+        xiRollAngle = Saturation(xiRollAngle, -iLimit, iLimit);
+        lat = kiRollAngle * xiRollAngle - phi * ksRollAngle - p * ksRollRate;
 
         // Pitch channel
-        xiPitch_OL = xiPitch_OLp + (thetaRef - theta) * dt;
-        if (thr < threshold) { xiPitch_OL = 0; }
-        qRef = (kiPitch_OL * xiPitch_OL - theta) * ksPitch_OL;
-
-        xiPitch_IL = xiPitch_ILp + (qRef - q) * dt;
-        if (thr < threshold) { xiPitch_IL = 0; }
-        lon = (kiPitch_IL * xiPitch_IL - q) * ksPitch_IL;
+        xiPitchAngle = xiPitchAnglePrev + (thetaRef - theta) * dt;
+        if (thr < threshold) { xiPitchAngle = 0; }
+        xiPitchAngle = Saturation(xiPitchAngle, -iLimit, iLimit);
+        lon = kiPitchAngle * xiPitchAngle - theta * ksPitchAngle - q * ksPitchRate;
 
         // Yaw channel
-        xiYaw_IL = xiYaw_ILp + (rRef - r) * dt;
-        if (thr < threshold) { xiYaw_IL = 0; }
-        pedal = (kiYaw_IL * xiYaw_IL - r) * ksYaw_IL;
+        xiYawRate = xiYawRatePrev + (rRef - r) * dt;
+        if (thr < threshold) { xiYawRate = 0; }
+        xiYawRate = Saturation(xiYawRate, -iLimit, iLimit);
+        pedal = kiYawRate * xiYawRate - r * ksYawRate;
 
         float m1 = ((kRoll * lat + kPitch * lon - pedal) / 2.0 * thr + thr);
         float m2 = ((-kRoll * lat + kPitch * lon + pedal) / 2.0 * thr + thr);
@@ -154,11 +149,9 @@ void Control::UpdateEscCmd(float dt, float p, float q, float r, float phi, float
     }
     else
     {
-        xiRoll_OL = 0;
-        xiPitch_OL = 0;
-        xiRoll_IL = 0;
-        xiPitch_IL = 0;
-        xiYaw_IL = 0;
+        xiRollAngle = 0;
+        xiPitchAngle = 0;
+        xiYawRate = 0;
         esc1->Update(1000);
         esc2->Update(1000);
         esc3->Update(1000);
@@ -166,9 +159,7 @@ void Control::UpdateEscCmd(float dt, float p, float q, float r, float phi, float
     }
 
     // Set previous state values.
-    xiRoll_OLp = xiRoll_OL;
-    xiPitch_OLp = xiPitch_OL;
-    xiRoll_ILp = xiRoll_IL;
-    xiPitch_ILp = xiPitch_IL;
-    xiYaw_ILp = xiYaw_IL;
+    xiRollAnglePrev = xiRollAngle;
+    xiPitchAnglePrev = xiPitchAngle;
+    xiYawRatePrev = xiYawRate;
 }
