@@ -142,6 +142,8 @@ void Control::UpdateEscCmd(float dt, float p, float q, float r, float phi, float
         float m2 = ((-kRoll * lat + kPitch * lon + pedal) / 2.0 * thr + thr);
         float m3 = ((-kRoll * lat - kPitch * lon - pedal) / 2.0 * thr + thr);
         float m4 = ((kRoll * lat - kPitch * lon + pedal) / 2.0 * thr + thr);
+        
+        pwmMax = 1950.0f; // There is an esc problem at max value. pwmMax: 2000 -> 1950.
         esc1->Update((uint16_t)std::round(Saturation(m1 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
         esc2->Update((uint16_t)std::round(Saturation(m2 * pwmRange + pwmIdle, pwmIdle, pwmMax)));
         esc3->Update((uint16_t)std::round(Saturation(m3 * pwmRange + pwmIdle, pwmIdle, pwmMax)));

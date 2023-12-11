@@ -86,7 +86,7 @@ private:
     float kRoll = 7.75 / 10.10 * (0.001467 / 0.001867); 	// 1-2: 20.2 cm, 1-RollAxis: 10.10 cm. (inertia ratio: Ixx/Iyy)
     float kPitch = 1.0f; 									// 1-4: 15.5 cm, 1-PitchAxis: 7.75 cm.
     float pwmIdle = 1000.0f;
-    float pwmMax = 1950.0f; // There is an esc problem at full throttle. 1.0 -> 0.95.
+    float pwmMax = 2000.0f;
     float pwmRange = pwmMax - pwmIdle;
     float Saturation(float value, float min, float max);
 
