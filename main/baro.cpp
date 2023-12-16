@@ -53,7 +53,7 @@ bool Baro::Init()
     altfp = alt;
     altf = alt;
     PrintPresTemp();
-    PrintAltVs();
+    PrintAlt();
     printf("MS5611 ready.\n");
     return true;
 }
@@ -61,7 +61,7 @@ bool Baro::Init()
 void Baro::Update(float dt)
 {
     CalculatePresTempAlt();
-    CalculateFilteredAltVs(dt);
+    CalculateFilteredAlt(dt);
 }
 
 bool Baro::SendConvCmdPres()
@@ -190,11 +190,10 @@ float Baro::CalculateAlpha(float f, float dt)
     return (omega * dt / (1.0f + omega * dt));
 }
 
-void Baro::CalculateFilteredAltVs(float dt)
+void Baro::CalculateFilteredAlt(float dt)
 {
     float altAlpha = CalculateAlpha(fCutAlt, dt);
     altf = (1.0f - altAlpha) * altfp + altAlpha * alt; // Filtered altitude
-    vs = (altf - altfp) / dt;                          // Vertical speed
     altfp = altf;
 }
 
@@ -203,7 +202,7 @@ void Baro::PrintPresTemp()
     printf("%s%.2f, %s%.2f\n", "pres: ", pressure, "temp: ", temperature);
 }
 
-void Baro::PrintAltVs()
+void Baro::PrintAlt()
 {
-    printf("alt: %.2f, altf: %.2f, vs: %.2f\n", alt, altf, vs);
+    printf("alt: %.2f, altf: %.2f\n", alt, altf);
 }

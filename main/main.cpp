@@ -32,7 +32,7 @@ extern "C" void app_main(void)
     I2c i2c(I2C_NUM_0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();           // Initialize I2C
 
-    const uint16_t freq = 500; // Main loop frequency [Hz]
+    const uint16_t freq = 250; // Main loop frequency [Hz]
 
     Ahrs ahrs(&i2c);          // Attitude and Heading Reference System
     if (!ahrs.Init(freq * 2)) // Sensor sample rate: (freq*2)
@@ -100,6 +100,7 @@ extern "C" void app_main(void)
     sbus.Flush();                                   // Clear sbus buffer.
     sbus.WaitForData(2);                            // Wait for first sbus data.
     BaseType_t xWasDelayed;                         // Deadline missed or not
+    int64_t iMissedDeadline = 0;                    // Missed deadline counter.
     float dt = 0;                                   // Time step
     int64_t prevTime = 0;                           // Previous time [us]
     int64_t elapsedTime = 0;                        // Elapsed time [us]
@@ -117,7 +118,7 @@ extern "C" void app_main(void)
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
-            // if 5 deadline accur, change led on-time. TODO
+            iMissedDeadline += 1;
         }
 
         ahrs.Update(dt);
@@ -131,7 +132,7 @@ extern "C" void app_main(void)
         // ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        // baro.Update(dt);
+        baro.Update(dt);
         // baro.PrintAltVs();
 
         if (sbus.Read())
@@ -155,15 +156,13 @@ extern "C" void app_main(void)
             int v = battery.GetVoltage(); // [mV]
             if (v >= 0 && v < 15000)      // 3S lipo
             {
-                // Sometimes Tx shows an unexpected voltage value.
-                // If it happens, delete sensor and discover again.
                 frsky.SetVoltage(v / 1000.0f);
             }
         }
         frsky.Operate();
 
         // Loop Led
-        led.BlinkLoop(100, 2000);
+        led.BlinkLoop(100, iMissedDeadline < 1 ? 2000 : 500);
 
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));

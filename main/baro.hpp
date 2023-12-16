@@ -46,19 +46,19 @@ private:
     float tsl = 15.0;      // Temperature sea level [°C]
     float alt = 0;         // Altitude sea level [m]
     bool state = false;    // false: Pres read, temp cmd. true: Pres cmd, temp read.
-    void CalculateFilteredAltVs(float dt);
+    void CalculateFilteredAlt(float dt);
     float CalculateAlpha(float f, float dt);
     float altf = 0;      // Filtered altitude [m]
-    float vs = 0;        // Vertical speed [m/s]
     float altfp = 0;     // Previous filtered altitude
-    float fCutAlt = 0.1; // [Hz]
+    float fCutAlt = 0.5; // [Hz]
 public:
     Baro(I2c *i2c) { this->i2c = i2c; }
     virtual ~Baro() = default;
     bool Init();
     void Update(float dt);
+    float GetFilteredAlt() { return altf; }
     void PrintPresTemp();
-    void PrintAltVs();
+    void PrintAlt();
 };
 
 #endif /* BARO_HPP */
