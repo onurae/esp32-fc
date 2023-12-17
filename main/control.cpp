@@ -46,8 +46,8 @@ void Control::CheckRxFailure()
         ch2_ele = 0;
         ch3_thr = 0;
         ch4_ail = 0;
-        ch5_2po = 0;
-        ch6_3po = -1;
+        ch5_2po = 0; // Disarm, drop.
+        ch6_3po = 0; // Not used.
         if (printState == true)
         {
             printf("Rx/Tx failure\n");
@@ -87,7 +87,7 @@ void Control::UpdateRefInput(float dt)
     ch4fp = ch4f;
 
     rRef = ch1f * maxYawRate;
-    thetaRef = -1.0 * ch2f * maxPitchAngle; // Revert theta reference.
+    thetaRef = -1.0f * ch2f * maxPitchAngle; // Revert theta reference.
     thr = ch3f;
     phiRef = ch4f * maxRollAngle;
 }

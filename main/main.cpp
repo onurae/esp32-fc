@@ -13,7 +13,6 @@
 #include "esp_timer.h"
 #include "led.hpp"
 #include "ahrs.hpp"
-#include "baro.hpp"
 #include "sbus.hpp"
 #include "control.hpp"
 #include "servo.hpp"
@@ -32,10 +31,10 @@ extern "C" void app_main(void)
     I2c i2c(I2C_NUM_0, 19, 23); // Port, SCL, SDA
     i2c.MasterInit();           // Initialize I2C
 
-    const uint16_t freq = 250; // Main loop frequency [Hz]
+    const uint16_t freq = 500; // Main loop frequency [Hz]
 
-    Ahrs ahrs(&i2c);          // Attitude and Heading Reference System
-    if (!ahrs.Init(freq * 2)) // Sensor sample rate: (freq*2)
+    Ahrs ahrs(&i2c);    // Attitude and Heading Reference System
+    if (!ahrs.Init())
     {
         printf("%s", "Ahrs Error!\n");
         led.BlinkForever(); // Do not proceed.
@@ -48,13 +47,6 @@ extern "C" void app_main(void)
     // ahrs.CalibrateAccGyro();
     // ahrs.CalibrateMag();
     // ahrs.PrintMagForMotionCal(false); // false: raw, true: calibrated. 115200 bps.
-
-    Baro baro(&i2c);
-    if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
-    {
-        printf("%s", "Baro Error!\n");
-        led.BlinkForever(); // Do not proceed.
-    }
 
     Battery battery;
     battery.Init();
@@ -132,9 +124,6 @@ extern "C" void app_main(void)
         // ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        baro.Update(dt);
-        // baro.PrintAltVs();
-
         if (sbus.Read())
         {
             // sbus.PrintData();
@@ -162,7 +151,7 @@ extern "C" void app_main(void)
         frsky.Operate();
 
         // Loop Led
-        led.BlinkLoop(100, iMissedDeadline < 1 ? 2000 : 500);
+        led.BlinkLoop(100, iMissedDeadline < 5 ? 2000 : 500);
 
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));

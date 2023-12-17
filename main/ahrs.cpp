@@ -14,17 +14,10 @@
 
 #include "Ahrs.hpp"
 
-bool Ahrs::Init(uint16_t sampleRate)
+bool Ahrs::Init()
 {
-    // Disable filters if the sample rate is below 500Hz.
-    if (sampleRate < 500)
-    {
-        fCutAcc = -1;
-        fCutGyro = -1;
-        fCutMag = -1;
-    }
-
     // MPU9250
+    uint16_t sampleRate = 1000;  // 1kHz.
     srd = 1000 / sampleRate - 1; // Calculate sample rate divider.
     uint8_t whoAmI;
     ESP_ERROR_CHECK(i2c->Read(addressMPU9250, 0x75, 1, &whoAmI)); // WhoAmI
@@ -621,7 +614,7 @@ void Ahrs::Converge(uint16_t freq)
             prevPhi = v1;
             prevTheta = v2;
             prevPsi = v3;
-            float tol = 0.1f; // Tolerance [deg]
+            float tol = 0.1f * M_PI / 180.0f; // Tolerance [rad], 0.1deg.
             if (abs(deltaPhi) < tol && abs(deltaTheta) < tol && abs(deltaPsi) < tol)
             {
                 isConverged = true;

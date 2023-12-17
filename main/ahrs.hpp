@@ -119,7 +119,7 @@ private:
 public:
     Ahrs(I2c *i2c) { this->i2c = i2c; }
     virtual ~Ahrs() = default;
-    bool Init(uint16_t sampleRate);
+    bool Init();
     void Update(float dt);
 
     // Rates & Angles

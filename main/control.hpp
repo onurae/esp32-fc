@@ -71,14 +71,14 @@ private:
     float thr = 0;      // Throttle
 
     // Gains
-    float kiRollAngle = 7.07;
-    float ksRollAngle = 2.65;
-    float ksRollRate = 0.48;
-    float kiPitchAngle = 7.07;
-    float ksPitchAngle = 2.65;
-    float ksPitchRate = 0.48;
-    float kiYawRate = 7.07;
-    float ksYawRate = 3.21;
+    float kiRollAngle = 6.124;
+    float ksRollAngle = 2.472;
+    float ksRollRate = 0.479;
+    float kiPitchAngle = 6.124;
+    float ksPitchAngle = 2.472;
+    float ksPitchRate = 0.479;
+    float kiYawRate = 6.124;
+    float ksYawRate = 2.992;
 
     // Mixer
     // 1 CW   2 CCW
