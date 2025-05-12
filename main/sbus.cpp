@@ -48,6 +48,7 @@ void Sbus::WaitForData(int interval)
 void Sbus::Flush()
 {
     uart_flush(uartPort);
+    uart_flush_input(uartPort);
 }
 
 bool Sbus::Read()
