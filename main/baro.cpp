@@ -12,7 +12,11 @@
 
 bool Baro::Init()
 {
-    if (i2c->Write(addressMS5611, 0x1E) != ESP_OK) // Reset
+    // I2C
+    i2c->AddDevice(addressMS5611, &msHandle);
+    
+    // Reset
+    if (i2c->Write(&msHandle, 0x1E) != ESP_OK)
     {
         printf("MS5611 not found!\n");
         return false;
@@ -23,7 +27,7 @@ bool Baro::Init()
     for (int i = 0; i < 6; i++) // Read calibration data
     {
         uint8_t buf[2];
-        ESP_ERROR_CHECK(i2c->Read(addressMS5611, 0xA2 + (i * 2), 2, buf));
+        ESP_ERROR_CHECK(i2c->Read(&msHandle, 0xA2 + (i * 2), 2, buf));
         cal[i] = ((uint16_t)buf[0]) << 8 | (uint16_t)buf[1];
     }
     printf(" C1: %d\n C2: %d\n C3: %d\n C4: %d\n C5: %d\n C6: %d\n", cal[0], cal[1], cal[2], cal[3], cal[4], cal[5]);
@@ -66,7 +70,7 @@ void Baro::Update(float dt)
 
 bool Baro::SendConvCmdPres()
 {
-    if (i2c->Write(addressMS5611, addDpt[0]) != ESP_OK)
+    if (i2c->Write(&msHandle, addDpt[0]) != ESP_OK)
     {
         return false;
     }
@@ -75,7 +79,7 @@ bool Baro::SendConvCmdPres()
 
 bool Baro::SendConvCmdTemp()
 {
-    if (i2c->Write(addressMS5611, addDpt[1]) != ESP_OK)
+    if (i2c->Write(&msHandle, addDpt[1]) != ESP_OK)
     {
         return false;
     }
@@ -85,7 +89,7 @@ bool Baro::SendConvCmdTemp()
 bool Baro::ReadPressure()
 {
     uint8_t buf[3];
-    if (i2c->Read(addressMS5611, 0x00, 3, buf) != ESP_OK)
+    if (i2c->Read(&msHandle, 0x00, 3, buf) != ESP_OK)
     {
         return false;
     }
@@ -100,7 +104,7 @@ bool Baro::ReadPressure()
 bool Baro::ReadTemperature()
 {
     uint8_t buf[3];
-    if (i2c->Read(addressMS5611, 0x00, 3, buf) != ESP_OK)
+    if (i2c->Read(&msHandle, 0x00, 3, buf) != ESP_OK)
     {
         return false;
     }

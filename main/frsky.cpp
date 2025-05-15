@@ -42,6 +42,7 @@ void Frsky::Init()
 void Frsky::Flush()
 {
     uart_flush(uartPort);
+    uart_flush_input(uartPort);
 }
 
 bool Frsky::Operate()
@@ -51,7 +52,7 @@ bool Frsky::Operate()
     {
         if (length > 2)
         {
-            uart_flush(uartPort);
+            uart_flush_input(uartPort);
             return false;
         }
         const int rxBytes = uart_read_bytes(uartPort, buf, length, 100 / portTICK_PERIOD_MS);

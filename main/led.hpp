@@ -35,7 +35,7 @@ public:
 
     int64_t currentTime = 0;                 // Current time [us]
     int64_t prevTime = 0;                    // Previous time [us]
-    int64_t delay = 0;                       // Delay [us]
+    int64_t delay = 0;                       // Delay [ms]
     void BlinkLoop(int onTime, int offTime); // [ms]
 };
 

@@ -17,6 +17,7 @@
 class Baro
 {
 private:
+    i2c_master_dev_handle_t msHandle;
     I2c *i2c;                           // I2C
     const uint8_t addressMS5611 = 0x77; // CSB: Low
     uint16_t cal[7];                    // Calibration data

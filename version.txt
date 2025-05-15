@@ -1,1 +1,6 @@
-0.0.1
+ESP-IDF v5.4.1
+
+cpu freq: 240Mhz
+tick freq: 1000Hz
+flash size: 4MB
+uart baudrate: 460800bps

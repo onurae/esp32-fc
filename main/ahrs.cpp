@@ -16,45 +16,49 @@
 
 bool Ahrs::Init()
 {
+    // I2C
+    i2c->AddDevice(addressMPU9250, &mpuHandle);
+    i2c->AddDevice(addressAK8963, &akHandle);
+
     // MPU9250
     uint16_t sampleRate = 1000;  // 1kHz.
     srd = 1000 / sampleRate - 1; // Calculate sample rate divider.
     uint8_t whoAmI;
-    ESP_ERROR_CHECK(i2c->Read(addressMPU9250, 0x75, 1, &whoAmI)); // WhoAmI
+    ESP_ERROR_CHECK(i2c->Read(&mpuHandle, 0x75, 1, &whoAmI)); // WhoAmI
     if (whoAmI != 0x71)
     {
         printf("MPU9250 not found!\n");
         return false;
     }
     printf("MPU9250 found.\n");
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x6B, 0x80)); // Reset MPU9250
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x6B, 0x80)); // Reset MPU9250
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x6B, 0x01)); // Clock source
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x6B, 0x01)); // Clock source
     vTaskDelay(200 / portTICK_PERIOD_MS);
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x19, srd));  // Sample rate divider. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x1A, 0x01)); // Gyro bandwitdh 184Hz, delay 2.9ms, fs 1kHz. Temperature bandwitdh 188Hz, delay 1.9ms.
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x1B, 0x00)); // Gyro full scale select: +-250 deg/s
-    gRes = 250.0 / 32768.0;                                  // +-250 deg/s
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x1C, 0x00)); // Acc full scale select: +-2 g
-    aRes = 2.0 / 32768.0;                                    // +-2 g
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x1D, 0x01)); // Acc bandwitdh 184Hz, delay 5.8ms, rate 1kHz.
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x37, 0x02)); // Enable bypass
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, srd));  // Sample rate divider. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x1A, 0x01)); // Gyro bandwitdh 184Hz, delay 2.9ms, fs 1kHz. Temperature bandwitdh 188Hz, delay 1.9ms.
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x1B, 0x00)); // Gyro full scale select: +-250 deg/s
+    gRes = 250.0 / 32768.0;                              // +-250 deg/s
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x1C, 0x00)); // Acc full scale select: +-2 g
+    aRes = 2.0 / 32768.0;                                // +-2 g
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x1D, 0x01)); // Acc bandwitdh 184Hz, delay 5.8ms, rate 1kHz.
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x37, 0x02)); // Enable bypass
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
     // AK8963
-    ESP_ERROR_CHECK(i2c->Write(addressAK8963, 0x0A, 0x00)); // Power down
+    ESP_ERROR_CHECK(i2c->Write(&akHandle, 0x0A, 0x00)); // Power down
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    ESP_ERROR_CHECK(i2c->Write(addressAK8963, 0x0A, 0x0F)); // Fuse ROM access mode
+    ESP_ERROR_CHECK(i2c->Write(&akHandle, 0x0A, 0x0F)); // Fuse ROM access mode
     vTaskDelay(100 / portTICK_PERIOD_MS);
     uint8_t data[3];
-    ESP_ERROR_CHECK(i2c->Read(addressAK8963, 0x10, 3, data)); // Sensitivity adjustment values
+    ESP_ERROR_CHECK(i2c->Read(&akHandle, 0x10, 3, data)); // Sensitivity adjustment values
     magXCoeff = (float)(data[0] - 128) / 256.0f + 1.0f;
     magYCoeff = (float)(data[1] - 128) / 256.0f + 1.0f;
     magZCoeff = (float)(data[2] - 128) / 256.0f + 1.0f;
-    ESP_ERROR_CHECK(i2c->Write(addressAK8963, 0x0A, 0x00)); // Power down
+    ESP_ERROR_CHECK(i2c->Write(&akHandle, 0x0A, 0x00)); // Power down
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    ESP_ERROR_CHECK(i2c->Write(addressAK8963, 0x0A, 0x16)); // 100Hz and 16-bit output.
-    mRes = 4912.0 / 32760.0;                                // 16-bit resolution
+    ESP_ERROR_CHECK(i2c->Write(&akHandle, 0x0A, 0x16)); // 100Hz and 16-bit output.
+    mRes = 4912.0 / 32760.0;                            // 16-bit resolution
     vTaskDelay(100 / portTICK_PERIOD_MS);
     printf(" MagXCoeff: %f\n MagYCoeff: %f\n MagZCoeff: %f\n", magXCoeff, magYCoeff, magZCoeff);
     printf("MPU9250 configured.\n");
@@ -143,11 +147,11 @@ float Ahrs::CalculateAlpha(float f, float dt)
 bool Ahrs::ReadAccGyroTemp()
 {
     uint8_t dataReady;
-    i2c->Read(addressMPU9250, 0x3A, 1, &dataReady);
+    i2c->Read(&mpuHandle, 0x3A, 1, &dataReady);
     if (dataReady & 0x01)
     {
         uint8_t buffer[14];
-        if (i2c->Read(addressMPU9250, 0x3B, 14, buffer) != ESP_OK)
+        if (i2c->Read(&mpuHandle, 0x3B, 14, buffer) != ESP_OK)
         {
             return false;
         }
@@ -173,11 +177,11 @@ bool Ahrs::ReadAccGyroTemp()
 bool Ahrs::ReadMag()
 {
     uint8_t dataReady;
-    i2c->Read(addressAK8963, 0x02, 1, &dataReady);
+    i2c->Read(&akHandle, 0x02, 1, &dataReady);
     if (dataReady & 0x01)
     {
         uint8_t buffer[7];
-        if (i2c->Read(addressAK8963, 0x03, 7, buffer) != ESP_OK)
+        if (i2c->Read(&akHandle, 0x03, 7, buffer) != ESP_OK)
         {
             return false;
         }
@@ -197,7 +201,7 @@ bool Ahrs::ReadMag()
 
 void Ahrs::CalibrateAccGyro()
 {
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x19, 9)); // 100Hz. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, 9)); // 100Hz. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
     printf("%s", "\nAccelerometer and gyroscope calibration\n");
     printf("%s", "The sensor should be on flat surface! This takes 10 seconds.\n");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -233,7 +237,7 @@ void Ahrs::CalibrateAccGyro()
     printf("%s", "\nCalibration completed.\n");
     PrintAccGyroBias();
 
-    ESP_ERROR_CHECK(i2c->Write(addressMPU9250, 0x19, srd)); // Set srd.
+    ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, srd)); // Set srd.
 }
 
 void Ahrs::CalibrateMag()

@@ -37,6 +37,8 @@ private:
     float mzs = 1.028;
 
     // I2C
+    i2c_master_dev_handle_t mpuHandle;
+    i2c_master_dev_handle_t akHandle;
     I2c *i2c;
 
     // MPU9250

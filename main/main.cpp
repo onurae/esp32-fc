@@ -7,12 +7,9 @@
  *                                                                                         *
  ******************************************************************************************/
 
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_timer.h"
 #include "led.hpp"
 #include "ahrs.hpp"
+#include "baro.hpp"
 #include "sbus.hpp"
 #include "control.hpp"
 #include "servo.hpp"
@@ -28,8 +25,8 @@ extern "C" void app_main(void)
     led.Init();
     led.TurnOn();
 
-    I2c i2c(I2C_NUM_0, 19, 23); // Port, SCL, SDA
-    i2c.MasterInit();           // Initialize I2C
+    I2c i2c(I2C_NUM_0, GPIO_NUM_19, GPIO_NUM_23); // Port, SCL, SDA
+    i2c.Init();   // Initialize I2C
 
     const uint16_t freq = 500; // Main loop frequency [Hz]
 
@@ -47,6 +44,13 @@ extern "C" void app_main(void)
     // ahrs.CalibrateAccGyro();
     // ahrs.CalibrateMag();
     // ahrs.PrintMagForMotionCal(false); // false: raw, true: calibrated. 115200 bps.
+
+    Baro baro(&i2c);
+    if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
+    {
+        printf("%s", "Baro Error!\n");
+        led.BlinkForever(); // Do not proceed.
+    }
 
     Battery battery;
     battery.Init();
@@ -123,6 +127,9 @@ extern "C" void app_main(void)
         // ahrs.PrintTemp();
         // ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
+
+        // baro.Update(dt);
+        // baro.PrintAlt();
 
         if (sbus.Read())
         {

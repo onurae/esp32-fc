@@ -10,7 +10,7 @@
 
 #include "i2c.hpp"
 
-I2c::I2c(i2c_port_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS) : 
+I2c::I2c(i2c_port_t masterPort, gpio_num_t sclIO, gpio_num_t sdaIO, uint16_t timeoutMS) : 
     masterPort(masterPort),
     sclIO(sclIO),
     sdaIO(sdaIO),
@@ -18,34 +18,40 @@ I2c::I2c(i2c_port_t masterPort, uint8_t sclIO, uint8_t sdaIO, uint16_t timeoutMS
 {
 }
 
-void I2c::MasterInit()
+void I2c::Init()
 {
-    i2c_config_t conf = {};
-    conf.mode = I2C_MODE_MASTER,
-    conf.sda_io_num = sdaIO,
-    conf.scl_io_num = sclIO,
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE,
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE,
-    conf.master.clk_speed = 400000,
-    conf.clk_flags = 0;
-
-    ESP_ERROR_CHECK(i2c_param_config(masterPort, &conf));
-    ESP_ERROR_CHECK(i2c_driver_install(masterPort, conf.mode, 0, 0, 0));
+    i2c_master_bus_config_t busConfig = {};
+    busConfig.i2c_port = masterPort;
+    busConfig.sda_io_num = sdaIO;
+    busConfig.scl_io_num = sclIO;
+    busConfig.clk_source = I2C_CLK_SRC_DEFAULT;
+    busConfig.glitch_ignore_cnt = 7;
+    busConfig.flags.enable_internal_pullup = true;
+    ESP_ERROR_CHECK(i2c_new_master_bus(&busConfig, &busHandle));
 }
 
-esp_err_t I2c::Write(uint8_t address, uint8_t data)
+void I2c::AddDevice(const uint8_t address, i2c_master_dev_handle_t* devHandle)
+{
+    i2c_device_config_t devConfig = {};
+    devConfig.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+    devConfig.device_address = address;
+    devConfig.scl_speed_hz = 400000;
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(busHandle, &devConfig, devHandle));
+}
+
+esp_err_t I2c::Write(i2c_master_dev_handle_t* devHandle, uint8_t data)
 {
     uint8_t writeBuffer[1] = {data};
-    return i2c_master_write_to_device(masterPort, address, writeBuffer, sizeof(writeBuffer), timeoutMS / portTICK_PERIOD_MS);
+    return i2c_master_transmit(*devHandle, writeBuffer, sizeof(writeBuffer), timeoutMS / portTICK_PERIOD_MS);
 }
 
-esp_err_t I2c::Write(uint8_t address, uint8_t registerAddress, uint8_t data)
+esp_err_t I2c::Write(i2c_master_dev_handle_t* devHandle, uint8_t registerAddress, uint8_t data)
 {
     uint8_t writeBuffer[2] = {registerAddress, data};
-    return i2c_master_write_to_device(masterPort, address, writeBuffer, sizeof(writeBuffer), timeoutMS / portTICK_PERIOD_MS);
+    return i2c_master_transmit(*devHandle, writeBuffer, sizeof(writeBuffer), timeoutMS / portTICK_PERIOD_MS);
 }
 
-esp_err_t I2c::Read(uint8_t address, uint8_t registerAddress, uint8_t len, uint8_t *buffer)
+esp_err_t I2c::Read(i2c_master_dev_handle_t* devHandle, uint8_t registerAddress, uint8_t len, uint8_t *buffer)
 {
-    return i2c_master_write_read_device(masterPort, address, &registerAddress, 1, buffer, len, timeoutMS / portTICK_PERIOD_MS);
+    return i2c_master_transmit_receive(*devHandle, &registerAddress, 1, buffer, len, timeoutMS / portTICK_PERIOD_MS);
 }
