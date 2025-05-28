@@ -9,25 +9,26 @@
  ******************************************************************************************/
 
 #include "util.hpp"
+static const char *TAG = "Util";
 
 void PrintCountDown(uint8_t sec)
 {
     for (int i = sec; i > 0; i--)
     {
-        printf("%d...\n", i);
+        ESP_LOGI(TAG, "%d...", i);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
 void PrintCountDown(const char *s, uint8_t sec)
 {
-    printf("%s\n", s);
+    ESP_LOGI(TAG, "%s", s);
     PrintCountDown(sec);
 }
 
 void Wait(const char *s, uint8_t sec)
 {
-    printf("Wait: %s [%ds]\n", s, sec);
+    ESP_LOGI(TAG, "Wait: %s [%ds]", s, sec);
     for (int i = sec; i > 0; i--)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -36,7 +37,7 @@ void Wait(const char *s, uint8_t sec)
 
 void WaitForever()
 {
-    printf("Wait: Forever!\n");
+    ESP_LOGI(TAG, "Wait: Forever!");
     while(true)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
