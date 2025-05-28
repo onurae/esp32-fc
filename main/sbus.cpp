@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "sbus.hpp"
+static const char *TAG = "Sbus";
 
 Sbus::Sbus(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin) : uartPort(uartPort), txPin(txPin), rxPin(rxPin)
 {
@@ -30,11 +31,11 @@ void Sbus::Init()
     ESP_ERROR_CHECK(uart_set_pin(uartPort, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_flush(uartPort));
 
-    printf("SBUS initialization...\n");
+    ESP_LOGI(TAG, "SBUS initialization...");
     uint8_t period = 7;                            // [ms]
     vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait.
-    WaitForData(1000);                             // [ms]
-    printf("SBUS ready.\n");
+    //WaitForData(1000);                             // [ms]
+    ESP_LOGI(TAG, "SBUS ready.");
 }
 
 void Sbus::WaitForData(int interval)
@@ -207,7 +208,7 @@ bool Sbus::GetFailSafe()
 
 void Sbus::PrintData()
 {
-    printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+    ESP_LOGI(TAG, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
            rxData.ch[0], rxData.ch[1], rxData.ch[2], rxData.ch[3], rxData.ch[4], rxData.ch[5], rxData.ch[6], rxData.ch[7],
            rxData.ch[8], rxData.ch[9], rxData.ch[10], rxData.ch[11], rxData.ch[12], rxData.ch[13], rxData.ch[14], rxData.ch[15],
            rxData.ch17, rxData.ch18, rxData.failSafe, rxData.frameLost);
@@ -226,5 +227,5 @@ void Sbus::PrintTest()
     bool fl = rxData.frameLost;
     // Test Note: After the Tx is switched off, rxData.frameLost is true almost immediately and rxData.failSafe is true after 1 second.
     // Both failsafe and framelost are set to false after the Tx is switched on.
-    printf("%d %f %d %d %d %f %d %d\n", ch0_raw, ch0, arm, another, throttle_raw, throttle, fs, fl);
+    ESP_LOGI(TAG, "%d %f %d %d %d %f %d %d", ch0_raw, ch0, arm, another, throttle_raw, throttle, fs, fl);
 }
