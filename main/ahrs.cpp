@@ -13,6 +13,7 @@
  ******************************************************************************************/
 
 #include "Ahrs.hpp"
+static const char *TAG = "Ahrs";
 
 bool Ahrs::Init()
 {
@@ -27,10 +28,10 @@ bool Ahrs::Init()
     ESP_ERROR_CHECK(i2c->Read(&mpuHandle, 0x75, 1, &whoAmI)); // WhoAmI
     if (whoAmI != 0x71)
     {
-        printf("MPU9250 not found!\n");
+        ESP_LOGI(TAG, "MPU9250 not found!");
         return false;
     }
-    printf("MPU9250 found.\n");
+    ESP_LOGI(TAG, "MPU9250 found.");
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x6B, 0x80)); // Reset MPU9250
     vTaskDelay(100 / portTICK_PERIOD_MS);
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x6B, 0x01)); // Clock source
@@ -60,8 +61,8 @@ bool Ahrs::Init()
     ESP_ERROR_CHECK(i2c->Write(&akHandle, 0x0A, 0x16)); // 100Hz and 16-bit output.
     mRes = 4912.0 / 32760.0;                            // 16-bit resolution
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    printf(" MagXCoeff: %f\n MagYCoeff: %f\n MagZCoeff: %f\n", magXCoeff, magYCoeff, magZCoeff);
-    printf("MPU9250 configured.\n");
+    ESP_LOGI(TAG, " MagXCoeff: %f MagYCoeff: %f MagZCoeff: %f", magXCoeff, magYCoeff, magZCoeff);
+    ESP_LOGI(TAG, "MPU9250 configured.");
     return true;
 }
 
@@ -87,7 +88,7 @@ void Ahrs::CalculateCalibratedAccGyro()
     }
     else
     {
-        printf("AccGyro data not ready\n");
+        ESP_LOGI(TAG, "AccGyro data not ready");
     }
 }
 
@@ -101,7 +102,7 @@ void Ahrs::CalculateCalibratedMag()
     }
     else
     {
-        // printf("Mag data not ready\n");
+        // ESP_LOGI(TAG, "Mag data not ready");
     }
 }
 
@@ -202,11 +203,11 @@ bool Ahrs::ReadMag()
 void Ahrs::CalibrateAccGyro()
 {
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, 9)); // 100Hz. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
-    printf("%s", "\nAccelerometer and gyroscope calibration\n");
-    printf("%s", "The sensor should be on flat surface! This takes 10 seconds.\n");
+    ESP_LOGI(TAG, "Accelerometer and gyroscope calibration");
+    ESP_LOGI(TAG, "The sensor should be on flat surface! This takes 10 seconds.");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     PrintCountDown("Beginning in", 3);
-    printf("%s", "Do not move the sensor!\n");
+    ESP_LOGI(TAG, "Do not move the sensor!");
     float bias[6] = {};
     uint16_t cycle = 0;
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -234,7 +235,7 @@ void Ahrs::CalibrateAccGyro()
     gxb = bias[3];
     gyb = bias[4];
     gzb = bias[5];
-    printf("%s", "\nCalibration completed.\n");
+    ESP_LOGI(TAG, "Calibration completed.");
     PrintAccGyroBias();
 
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, srd)); // Set srd.
@@ -242,11 +243,11 @@ void Ahrs::CalibrateAccGyro()
 
 void Ahrs::CalibrateMag()
 {
-    printf("%s", "\nMagnetometer calibration\n");
-    printf("%s", "Rotate the sensor about all axes until complete! This takes 30 seconds.\n");
+    ESP_LOGI(TAG, "Magnetometer calibration");
+    ESP_LOGI(TAG, "Rotate the sensor about all axes until complete! This takes 30 seconds.");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     PrintCountDown("Beginning in", 3);
-    printf("%s", "Start rotating!\n");
+    ESP_LOGI(TAG, "Start rotating!");
     ReadMag();
     float mMax[3] = {mxr, myr, mzr};
     float mMin[3] = {mxr, myr, mzr};
@@ -270,8 +271,8 @@ void Ahrs::CalibrateMag()
         }
         cycle++;
     }
-    printf("mMin = x: %f y: %f z: %f\n", mMin[0], mMin[1], mMin[2]);
-    printf("mMax = x: %f y: %f z: %f\n", mMax[0], mMax[1], mMax[2]);
+    ESP_LOGI(TAG, "mMin = x: %f y: %f z: %f", mMin[0], mMin[1], mMin[2]);
+    ESP_LOGI(TAG, "mMax = x: %f y: %f z: %f", mMax[0], mMax[1], mMax[2]);
 
     mxb = (mMax[0] + mMin[0]) / 2.0f;
     myb = (mMax[1] + mMin[1]) / 2.0f;
@@ -284,7 +285,7 @@ void Ahrs::CalibrateMag()
     mxs = av / mix;
     mys = av / miy;
     mzs = av / miz;
-    printf("%s", "\nCalibration completed.\n");
+    ESP_LOGI(TAG, "Calibration completed.");
     PrintMagBiasScale();
 }
 
@@ -297,69 +298,69 @@ void Ahrs::PrintMagForMotionCal(bool cal)
         CalculateCalibratedMag();
         if (cal)
         {
-            printf("Raw:0,0,0,0,0,0,%d,%d,%d\n", (int)(mxc * 10), (int)(myc * 10), (int)(mzc * 10));
+            ESP_LOGI(TAG, "Raw:0,0,0,0,0,0,%d,%d,%d", (int)(mxc * 10), (int)(myc * 10), (int)(mzc * 10));
         }
         else
         {
-            printf("Raw:0,0,0,0,0,0,%d,%d,%d\n", (int)(mxr * 10), (int)(myr * 10), (int)(mzr * 10));
+            ESP_LOGI(TAG, "Raw:0,0,0,0,0,0,%d,%d,%d", (int)(mxr * 10), (int)(myr * 10), (int)(mzr * 10));
         }
     }
 }
 
 void Ahrs::PrintAccRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "axr: ", axr, "ayr: ", ayr, "azr: ", azr);
+    ESP_LOGI(TAG, "axr: %.2f, ayr: %.2f, azr: %.2f", axr, ayr, azr);
 }
 
 void Ahrs::PrintGyroRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "gxr: ", gxr, "gyr: ", gyr, "gzr: ", gzr);
+    ESP_LOGI(TAG, "gxr: %.2f, gyr: %.2f, gzr: %.2f", gxr, gyr, gzr);
 }
 
 void Ahrs::PrintMagRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "mxr: ", mxr, "myr: ", myr, "mzr: ", mzr);
+    ESP_LOGI(TAG, "mxr: %.2f, myr: %.2f, mzr: %.2f", mxr, myr, mzr);
 }
 
 void Ahrs::PrintTemp()
 {
-    printf("%s%.2f\n", "tpr: ", tpr);
+    ESP_LOGI(TAG, "tpr: %.2f", tpr);
 }
 
 void Ahrs::PrintAccCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "axc: ", axc, "ayc: ", ayc, "azc: ", azc);
+    ESP_LOGI(TAG, "axc: %.2f, ayc: %.2f, azc: %.2f", axc, ayc, azc);
 }
 
 void Ahrs::PrintGyroCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "gxc: ", gxc, "gyc: ", gyc, "gzc: ", gzc);
+    ESP_LOGI(TAG, "gxc: %.2f, gyc: %.2f, gzc: %.2f", gxc, gyc, gzc);
 }
 
 void Ahrs::PrintMagCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "mxc: ", mxc, "myc: ", myc, "mzc: ", mzc);
+    ESP_LOGI(TAG, "mxc: %.2f, myc: %.2f, mzc: %.2f", mxc, myc, mzc);
 }
 
 void Ahrs::PrintAccGyroBias()
 {
-    printf("%s", "Enter these values to the Ahrs.hpp file and comment out the CalibrateAccGyro function.\n");
-    printf("%s%f\n", "biasAx = ", axb);
-    printf("%s%f\n", "biasAy = ", ayb);
-    printf("%s%f\n", "biasAz = ", azb);
-    printf("%s%f\n", "biasGx = ", gxb);
-    printf("%s%f\n", "biasGy = ", gyb);
-    printf("%s%f\n", "biasGz = ", gzb);
+    ESP_LOGI(TAG, "Enter these values to the Ahrs.hpp file and comment out the CalibrateAccGyro function.");
+    ESP_LOGI(TAG, "biasAx = %f", axb);
+    ESP_LOGI(TAG, "biasAy = %f", ayb);
+    ESP_LOGI(TAG, "biasAz = %f", azb);
+    ESP_LOGI(TAG, "biasGx = %f", gxb);
+    ESP_LOGI(TAG, "biasGy = %f", gyb);
+    ESP_LOGI(TAG, "biasGz = %f", gzb);
     WaitForever();
 }
 
 void Ahrs::PrintMagBiasScale()
 {
-    printf("%s", "Enter these values to the Ahrs.hpp file and comment out the CalibrateMag function.\n");
-    printf("%s", "Hard iron: \n");
-    printf("Bias = x: %f y: %f z: %f\n", mxb, myb, mzb);
-    printf("%s", "Soft iron: \n");
-    printf("Scale = x: %f y: %f z: %f\n", mxs, mys, mzs);
+    ESP_LOGI(TAG, "Enter these values to the Ahrs.hpp file and comment out the CalibrateMag function.");
+    ESP_LOGI(TAG, "Hard iron: ");
+    ESP_LOGI(TAG, "Bias = x: %f y: %f z: %f", mxb, myb, mzb);
+    ESP_LOGI(TAG, "Soft iron: ");
+    ESP_LOGI(TAG, "Scale = x: %f y: %f z: %f", mxs, mys, mzs);
     WaitForever();
 }
 
@@ -566,15 +567,15 @@ void Ahrs::CalculateEulerAngles()
 
 void Ahrs::PrintQuaternions()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f, %s%.2f\n", "q0: ", q0, "q1: ", q1, "q2: ", q2, "q3: ", q3);
+    ESP_LOGI(TAG, "q0: %.2f, q1: %.2f, q2: %.2f, q3: %.2f", q0, q1, q2, q3);
 }
 
 void Ahrs::PrintEulerAngles()
 {
-    printf("%s%.1f, %s%.1f, %s%.1f\n", "phi: ", RadToDeg(phi), "theta: ", RadToDeg(theta), "psi: ", RadToDeg(psi));
+    ESP_LOGI(TAG, "phi: %.1f, theta: %.1f, psi: %.1f", RadToDeg(phi), RadToDeg(theta), RadToDeg(psi));
 }
 
-void Ahrs::Converge(uint16_t freq)
+void Ahrs::Converge()
 {
     bool isConverged = false;
     float deltaPhi = 0;
@@ -583,32 +584,30 @@ void Ahrs::Converge(uint16_t freq)
     float prevPhi = 0;
     float prevTheta = 0;
     float prevPsi = 0;
-    int64_t i = 0;
-
-    BaseType_t xWasDelayed;                         // Deadline missed or not
-    float dt = 0;                                   // Time step
-    int64_t prevTime = 0;                           // Previous time [us]
-    int64_t elapsedTime = 0;                        // Elapsed time [us]
-    int64_t currentTime = esp_timer_get_time();     // Current time [us]
-    const int loopTime = 1000 / freq;               // Loop time [ms]
-    TickType_t xLastWakeTime = xTaskGetTickCount(); // Last wake time
-    while (isConverged == false)
+    float tol = 0.1f * M_PI / 180.0f;   // Tolerance [rad], 0.1deg.
+    int64_t iTime = 0;                  // Counter time
+    int64_t pTime = esp_timer_get_time();
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    while(isConverged == false)
     {
-        xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(loopTime)); // Wait for the next cycle.
-        prevTime = currentTime;
-        currentTime = esp_timer_get_time();   // [us]
-        elapsedTime = currentTime - prevTime; // [us]
-        dt = elapsedTime / 1000000.0f;        // [s]
-        Update(dt);
-        PrintEulerAngles();
+        BaseType_t xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(3)); // ~333Hz.
         if (xWasDelayed == pdFALSE)
         {
             printf("%s", "Deadline missed!\n");
         }
-        // Calculate delta values for every 2 sec.
-        if (i > freq * 2)
+        int64_t sTime = esp_timer_get_time();
+        int64_t dTime = sTime - pTime;
+        pTime = sTime;
+        float dt = dTime * 0.000001f;
+        Update(dt);
+        //ESP_LOGW(TAG, "%lld", dTime);
+        PrintEulerAngles();
+
+        // Calculate the delta values every 2 seconds.
+        iTime += dTime;
+        if (iTime >= 2000000)
         {
-            i = 0;
+            iTime = 0;
             float v1 = GetPhi();
             float v2 = GetTheta();
             float v3 = GetPsi();
@@ -618,12 +617,10 @@ void Ahrs::Converge(uint16_t freq)
             prevPhi = v1;
             prevTheta = v2;
             prevPsi = v3;
-            float tol = 0.1f * M_PI / 180.0f; // Tolerance [rad], 0.1deg.
             if (abs(deltaPhi) < tol && abs(deltaTheta) < tol && abs(deltaPsi) < tol)
             {
                 isConverged = true;
             }
         }
-        i += 1;
     }
 }

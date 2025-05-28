@@ -151,7 +151,7 @@ public:
     void PrintEulerAngles();
 
     // Madgwick
-    void Converge(uint16_t freq);
+    void Converge();
 };
 
 #endif /* AHRS_HPP */
