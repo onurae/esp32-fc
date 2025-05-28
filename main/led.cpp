@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "led.hpp"
+static const char *TAG = "Led";
 
 void Led::Init()
 {
@@ -32,7 +33,7 @@ void Led::Blink(int numBlinks, int onTime, int offTime)
 
 void Led::BlinkForever(int intervalMS)
 {
-    printf("Infinite loop: Led ON/OFF\n");
+    ESP_LOGI(TAG, "Infinite loop: Led ON/OFF");
     while (true)
     {
         Flip();
