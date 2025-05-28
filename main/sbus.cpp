@@ -34,7 +34,7 @@ void Sbus::Init()
     ESP_LOGI(TAG, "SBUS initialization...");
     uint8_t period = 7;                            // [ms]
     vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait.
-    //WaitForData(1000);                             // [ms]
+    WaitForData(1000);                             // [ms]
     ESP_LOGI(TAG, "SBUS ready.");
 }
 
