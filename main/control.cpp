@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "control.hpp"
+static const char *TAG = "Control";
 
 void Control::Init(uint16_t freq, Esc *esc1, Esc *esc2, Esc *esc3, Esc *esc4)
 {
@@ -50,7 +51,7 @@ void Control::CheckRxFailure()
         ch6_3po = 0; // Not used.
         if (printState == true)
         {
-            printf("Rx/Tx failure\n");
+            ESP_LOGI(TAG, "Rx/Tx failure");
             printState = false;
         }
     }
@@ -58,7 +59,7 @@ void Control::CheckRxFailure()
     {
         if (printState == false)
         {
-            printf("Rx/Tx connected\n");
+            ESP_LOGI(TAG, "Rx/Tx connected");
             printState = true;
         }
     }
@@ -94,8 +95,8 @@ void Control::UpdateRefInput(float dt)
 
 void Control::PrintRef()
 {
-    printf("%.1f, %.1f, %.2f, %.1f\n ", rRef, thetaRef, thr, phiRef);
-    // printf("%.3f, %.3f\n", ch1_rud, ch1f);
+    ESP_LOGI(TAG, "%.1f, %.1f, %.2f, %.1f ", rRef, thetaRef, thr, phiRef);
+    // ESP_LOGI(TAG, "%.3f, %.3f", ch1_rud, ch1f);
 }
 
 void Control::Arming()
