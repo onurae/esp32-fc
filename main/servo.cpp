@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "Servo.hpp"
+static const char *TAG = "Servo";
 
 Servo::Servo(ServoOperator* servoOperator, gpio_num_t pwmPin, uint16_t minPulseWidth, uint16_t maxPulseWidth, int minAngleDeg, int maxAngleDeg, uint16_t initialPulseWidth) :
     pwmPin(pwmPin), minPulseWidth(minPulseWidth), maxPulseWidth(maxPulseWidth), minAngleDeg(minAngleDeg), maxAngleDeg(maxAngleDeg)
@@ -63,7 +64,7 @@ void ServoTest(Servo* servo1, Servo* servo2, Servo* servo3, Servo* servo4)
         servo2->Update(angle * -1.0f);
         servo3->Update(angle * 0.5f);
         servo4->Update(angle * -0.5f);
-        printf("%d\n", angle);
+        ESP_LOGI(TAG, "%d", angle);
         // Wait for servo to rotate, ex: @5V, 0.10s/60degree at no load.
         vTaskDelay(500 / portTICK_PERIOD_MS);
         if ((angle + step) > 45 || (angle + step) < -45)
