@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "battery.hpp"
+static const char *TAG = "Battery";
 
 void Battery::Init()
 {
@@ -22,7 +23,7 @@ void Battery::Init()
     config.atten = adcAtten;
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, adcChannel, &config));
 
-    printf("Calibration scheme version is line fitting\n");
+    ESP_LOGI(TAG, "Calibration scheme version is line fitting");
     adc_cali_line_fitting_config_t caliConfig = {};
     caliConfig.unit_id = ADC_UNIT_1;
     caliConfig.atten = adcAtten;
@@ -48,9 +49,9 @@ int Battery::GetVoltage()
     {
         adcReading /= j;
     }
-    //printf("ADC%d Channel[%d] Raw Data(Average): %ld\n", ADC_UNIT_1 + 1, adcChannel, adcReading);
+    //ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data(Average): %ld", ADC_UNIT_1 + 1, adcChannel, adcReading);
     ret = adc_cali_raw_to_voltage(adcCaliHandle, adcReading, &voltage);
-    //printf("ADC%d Channel[%d] Cali Voltage: %d mV\n", ADC_UNIT_1 + 1, adcChannel, voltage);
+    //ESP_LOGI(TAG, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, adcChannel, voltage);
     if (ret != ESP_OK)
     {
         return 0;
@@ -61,7 +62,7 @@ int Battery::GetVoltage()
 bool Battery::Delete()
 {
     esp_err_t ret = adc_oneshot_del_unit(adcHandle);
-    printf("Deregister line fitting calibration scheme\n");
+    ESP_LOGI(TAG, "Deregister line fitting calibration scheme");
     ret = adc_cali_delete_scheme_line_fitting(adcCaliHandle);
     if (ret != ESP_OK)
     {
