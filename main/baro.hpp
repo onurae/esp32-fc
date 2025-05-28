@@ -12,6 +12,7 @@
 #define BARO_HPP
 
 #include "i2c.hpp"
+#include "esp_log.h"
 #include <cmath>
 
 class Baro

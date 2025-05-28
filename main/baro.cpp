@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "baro.hpp"
+static const char *TAG = "Baro";
 
 bool Baro::Init()
 {
@@ -18,10 +19,10 @@ bool Baro::Init()
     // Reset
     if (i2c->Write(&msHandle, 0x1E) != ESP_OK)
     {
-        printf("MS5611 not found!\n");
+        ESP_LOGI(TAG, "MS5611 not found!");
         return false;
     }
-    printf("MS5611 found.\n");
+    ESP_LOGI(TAG, "MS5611 found.");
     vTaskDelay(10 / portTICK_PERIOD_MS);
 
     for (int i = 0; i < 6; i++) // Read calibration data
@@ -30,25 +31,25 @@ bool Baro::Init()
         ESP_ERROR_CHECK(i2c->Read(&msHandle, 0xA2 + (i * 2), 2, buf));
         cal[i] = ((uint16_t)buf[0]) << 8 | (uint16_t)buf[1];
     }
-    printf(" C1: %d\n C2: %d\n C3: %d\n C4: %d\n C5: %d\n C6: %d\n", cal[0], cal[1], cal[2], cal[3], cal[4], cal[5]);
+    ESP_LOGI(TAG, " C1: %d C2: %d C3: %d C4: %d C5: %d C6: %d", cal[0], cal[1], cal[2], cal[3], cal[4], cal[5]);
     tRef = (int64_t)cal[4] << 8;
     tOff1 = (int64_t)cal[1] << 16;
     tSens1 = (int64_t)cal[0] << 15;
 
     if (SendConvCmdTemp() == false) // Send temperature command
     {
-        printf("MS5611 temperature command error.\n");
+        ESP_LOGI(TAG, "MS5611 temperature command error.");
         return false;
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
     if (ReadTemperature() == false) // Read digital temperature value
     {
-        printf("MS5611 temperature read error.\n");
+        ESP_LOGI(TAG, "MS5611 temperature read error.");
         return false;
     }
     if (SendConvCmdPres() == false) // Send pressure command
     {
-        printf("MS5611 pressure command error.\n");
+        ESP_LOGI(TAG, "MS5611 pressure command error.");
         return false;
     }
     lastConvTick = xTaskGetTickCount();
@@ -58,7 +59,7 @@ bool Baro::Init()
     altf = alt;
     PrintPresTemp();
     PrintAlt();
-    printf("MS5611 ready.\n");
+    ESP_LOGI(TAG, "MS5611 ready.");
     return true;
 }
 
@@ -203,10 +204,10 @@ void Baro::CalculateFilteredAlt(float dt)
 
 void Baro::PrintPresTemp()
 {
-    printf("%s%.2f, %s%.2f\n", "pres: ", pressure, "temp: ", temperature);
+    ESP_LOGI(TAG, "pres: %.2f, temp: %.2f", pressure, temperature);
 }
 
 void Baro::PrintAlt()
 {
-    printf("alt: %.2f, altf: %.2f\n", alt, altf);
+    ESP_LOGI(TAG, "alt: %.2f, altf: %.2f", alt, altf);
 }
