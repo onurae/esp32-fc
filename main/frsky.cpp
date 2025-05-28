@@ -9,6 +9,7 @@
  ******************************************************************************************/
 
 #include "frsky.hpp"
+static const char *TAG = "Frsky";
 
 Frsky::Frsky(uart_port_t uartPort, gpio_num_t txPin, gpio_num_t rxPin) : uartPort(uartPort), txPin(txPin), rxPin(rxPin)
 {
@@ -30,13 +31,13 @@ void Frsky::Init()
     ESP_ERROR_CHECK(uart_set_pin(uartPort, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_flush(uartPort));
 
-    printf("FrSKY telemetry initialization...\n");
+    ESP_LOGI(TAG, "FrSKY telemetry initialization...");
     uint8_t period = 11; // [ms]
     while (!Operate())
     {
         vTaskDelay(period / portTICK_PERIOD_MS);
     }
-    printf("FrSKY telemetry ready.\n");
+    ESP_LOGI(TAG, "FrSKY telemetry ready.");
 }
 
 void Frsky::Flush()
