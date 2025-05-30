@@ -22,12 +22,6 @@ static const char *TAG = "Main";
 #define MEASURE_EXECUTION_TIME 0    // Set it zero before flight.
 static const uint16_t freq = 400;   // Main loop frequency [Hz]
 static TaskHandle_t mainTaskHandle = nullptr;
-struct SharedData
-{
-    float altitude{ 0.0f };
-};
-static SharedData sharedData;
-static SemaphoreHandle_t xDataMutex;
 
 static bool IRAM_ATTR timer_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
@@ -72,8 +66,14 @@ extern "C" void MainTask(void* parameter)
         led.BlinkForever(); // Do not proceed.
     }
 
+    Battery battery;
+    battery.Init();
+    ESP_LOGI(TAG, "Battery Voltage: %d", battery.GetVoltage());
+
     Sbus sbus;
     sbus.Init();
+    Frsky frsky;
+    frsky.Init();
     led.Blink(5, 100, 100); // Indicates receiver connection.
     led.TurnOn();
 
@@ -105,6 +105,8 @@ extern "C" void MainTask(void* parameter)
 
     PrintCountDown("Entering loop in", 3);          // Entering loop counter.
     led.Blink(3, 150, 75);                          // Indicates entering loop.
+    int iFrsky = 0;                                 // Telemetry counter.
+    frsky.Flush();                                  // Clear telemetry buffer.
     sbus.Flush();                                   // Clear sbus buffer.
     sbus.WaitForData(2);                            // Wait for first sbus data.
     bool missedDeadline = false;                    // Missed deadline flag.
@@ -139,13 +141,8 @@ extern "C" void MainTask(void* parameter)
 
         baro.Update(dt);
         // baro.PrintAlt();
-        float fAlt = baro.GetFilteredAlt();
+        float altf = baro.GetFilteredAlt();
         float alt = baro.GetRawAlt();
-        if (xSemaphoreTake(xDataMutex, 0) == pdTRUE)
-        {
-            sharedData.altitude = fAlt;
-            xSemaphoreGive(xDataMutex);
-        }
 
         if (sbus.Read())
         {
@@ -159,6 +156,20 @@ extern "C" void MainTask(void* parameter)
         contr.UpdateEscCmd(dt,
             ahrs.GetP(), ahrs.GetQ(), ahrs.GetR(),
             ahrs.GetPhi(), ahrs.GetTheta(), ahrs.GetPsi());
+
+        // Telemetry
+        iFrsky += 1;
+        if (iFrsky >= freq) // Every 1 second.
+        {
+            iFrsky = 0;
+            int v = battery.GetVoltage(); // [mV]
+            if (v >= 0 && v < 15000)      // 3S lipo
+            {
+                frsky.SetVoltage(v / 1000.0f);
+            }
+            frsky.SetAltitude(altf);
+        }
+        frsky.Operate();
 
         // Loop Led
         led.BlinkLoop(100, missedDeadline == false ? 2000 : 300);
@@ -178,45 +189,8 @@ extern "C" void MainTask(void* parameter)
     }
 }
 
-extern "C" void TelemetryTask(void* parameter)
-{
-    Battery battery;
-    battery.Init();
-    ESP_LOGI(TAG, "Battery Voltage: %d", battery.GetVoltage());
-    
-    Frsky frsky;
-    frsky.Init();
-    frsky.Flush();  // Clear telemetry buffer.
-
-    uint32_t currentTick = xTaskGetTickCount();
-    uint32_t lastTick = currentTick;
-    while(true)
-    {
-        currentTick = xTaskGetTickCount();
-        if ((currentTick - lastTick) >= pdMS_TO_TICKS(1000)) // Every 1 second.
-        {
-            lastTick = currentTick;
-            int v = battery.GetVoltage(); // [mV]
-            if (v >= 0 && v < 15000)      // 3S lipo
-            {
-                frsky.SetVoltage(v * 0.001f);
-            }
-        }
-        if (xSemaphoreTake(xDataMutex, 0) == pdTRUE)
-        {
-            frsky.SetAltitude(sharedData.altitude);
-            frsky.SetVario(0.0f);
-            xSemaphoreGive(xDataMutex);
-        }
-        frsky.Operate();
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
-}
-
 extern "C" void app_main(void)
 {
-    xDataMutex = xSemaphoreCreateMutex();
-    xTaskCreatePinnedToCore(TelemetryTask, "Telemetry Task", 4096, nullptr, 1, nullptr, 1);
     xTaskCreatePinnedToCore(MainTask, "Main Task", 8192, nullptr, 2, &mainTaskHandle, 1);
     vTaskDelete(nullptr);
 }
