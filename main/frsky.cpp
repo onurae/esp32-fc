@@ -62,15 +62,19 @@ bool Frsky::Operate()
             switch (buf[1])
             {
             case 0x00: // ID1
+                if (i[0] == 0) { SendData(dataID_ALT, altitude * 100); }    // Ex: 950.45m
+                if (i[0] == 1) { SendData(dataID_VARIO, vario * 100); }     // Ex: 1.32m/s
+                i[0]++;
+                if (i[0] >= 2) { i[0] = 0; }
+                return true;
                 break;
             case 0xA1: // ID2
                 break;
-            case 0x22: // ID3 - FAS40S
-                if (i[2] % 2 == 0)
-                    SendData(dataID_CURR, current * 10); // Ex: 10.5A
-                if (i[2] % 2 == 1)
-                    SendData(dataID_VFAS, voltage * 100); // Ex: 10.55V
+            case 0x22: // ID3
+                if (i[2] == 0) { SendData(dataID_CURR, current * 10); }     // Ex: 10.5A
+                if (i[2] == 1) { SendData(dataID_VFAS, voltage * 100); }    // Ex: 10.55V
                 i[2]++;
+                if (i[2] >= 2) { i[2] = 0; }
                 return true;
                 break;
             case 0x83: // ID4

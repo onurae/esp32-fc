@@ -27,7 +27,7 @@ private:
     // Sensor ID
     const uint8_t sensorID1 = 0x00;
     const uint8_t sensorID2 = 0xA1;
-    const uint8_t sensorID3 = 0x22; // FAS40S
+    const uint8_t sensorID3 = 0x22;
     const uint8_t sensorID4 = 0x83;
     const uint8_t sensorID5 = 0xE4;
     const uint8_t sensorID6 = 0x45;
@@ -55,7 +55,7 @@ private:
     const uint8_t sensorID28 = 0x1B;
 
     // Data ID
-    unsigned int i[28] = {};
+    uint8_t i[28] = {};
     const uint16_t dataID_RSSI = 0xf101;
     const uint16_t dataID_ADC1 = 0xf102;
     const uint16_t dataID_ADC2 = 0xf103;
@@ -82,8 +82,10 @@ private:
     void SendData(uint16_t id, int32_t val, uint8_t type = 0x10);
     void SendByte(uint8_t c, uint16_t *crcp);
 
-    float current = 0;
-    float voltage = 0;
+    float current = 0.0f;
+    float voltage = 0.0f;
+    float altitude = 0.0f;
+    float vario = 0.0f;
 
 public:
     Frsky(uart_port_t uartPort = UART_NUM_1, gpio_num_t txPin = GPIO_NUM_17, gpio_num_t rxPin = GPIO_NUM_16);
@@ -95,6 +97,8 @@ public:
 
     void SetCurrent(float c) { current = c; }
     void SetVoltage(float v) { voltage = v; }
+    void SetAltitude(float a) {altitude = a; }
+    void SetVario(float v) { vario = v; }
 };
 
 #endif /* FRSKY_HPP */
