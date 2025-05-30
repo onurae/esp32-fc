@@ -22,6 +22,13 @@ static const char *TAG = "Main";
 #define MEASURE_EXECUTION_TIME 0    // Set it zero before flight.
 static const uint16_t freq = 400;   // Main loop frequency [Hz]
 static TaskHandle_t mainTaskHandle = nullptr;
+struct SharedData
+{
+    float altitude{ 0.0f };
+};
+static SharedData sharedData;
+static SemaphoreHandle_t xDataMutex;
+
 static bool IRAM_ATTR timer_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -133,6 +140,12 @@ extern "C" void MainTask(void* parameter)
         baro.Update(dt);
         // baro.PrintAlt();
         float fAlt = baro.GetFilteredAlt();
+        float alt = baro.GetRawAlt();
+        if (xSemaphoreTake(xDataMutex, 0) == pdTRUE)
+        {
+            sharedData.altitude = fAlt;
+            xSemaphoreGive(xDataMutex);
+        }
 
         if (sbus.Read())
         {
@@ -173,8 +186,6 @@ extern "C" void TelemetryTask(void* parameter)
     
     Frsky frsky;
     frsky.Init();
-    frsky.SetCurrent(0.0f);
-    frsky.SetVoltage(battery.GetVoltage() / 1000.0f);
     frsky.Flush();  // Clear telemetry buffer.
 
     uint32_t currentTick = xTaskGetTickCount();
@@ -188,8 +199,14 @@ extern "C" void TelemetryTask(void* parameter)
             int v = battery.GetVoltage(); // [mV]
             if (v >= 0 && v < 15000)      // 3S lipo
             {
-                frsky.SetVoltage(v / 1000.0f);
+                frsky.SetVoltage(v * 0.001f);
             }
+        }
+        if (xSemaphoreTake(xDataMutex, 0) == pdTRUE)
+        {
+            frsky.SetAltitude(sharedData.altitude);
+            frsky.SetVario(0.0f);
+            xSemaphoreGive(xDataMutex);
         }
         frsky.Operate();
         vTaskDelay(1 / portTICK_PERIOD_MS);
@@ -198,6 +215,7 @@ extern "C" void TelemetryTask(void* parameter)
 
 extern "C" void app_main(void)
 {
+    xDataMutex = xSemaphoreCreateMutex();
     xTaskCreatePinnedToCore(TelemetryTask, "Telemetry Task", 4096, nullptr, 1, nullptr, 1);
     xTaskCreatePinnedToCore(MainTask, "Main Task", 8192, nullptr, 2, &mainTaskHandle, 1);
     vTaskDelete(nullptr);
