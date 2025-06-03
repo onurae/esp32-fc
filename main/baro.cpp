@@ -203,7 +203,7 @@ void Baro::CalculateFilteredAlt(float dt)
 
 void Baro::PrintPresTemp()
 {
-    printf("%s%.2f, %s%.2f\n", "pres: ", pressure, "temp: ", temperature);
+    printf("pres: %.2f, temp: %.2f", pressure, temperature);
 }
 
 void Baro::PrintAlt()

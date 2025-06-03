@@ -16,6 +16,7 @@
 #include "esc.hpp"
 #include "battery.hpp"
 #include "frsky.hpp"
+#include "rom/ets_sys.h"
 
 extern "C" void app_main(void)
 {
@@ -28,16 +29,16 @@ extern "C" void app_main(void)
     I2c i2c(I2C_NUM_0, GPIO_NUM_19, GPIO_NUM_23); // Port, SCL, SDA
     i2c.Init();   // Initialize I2C
 
-    const uint16_t freq = 500; // Main loop frequency [Hz]
+    const uint16_t freq = 400; // Main loop frequency [Hz]
 
     Ahrs ahrs(&i2c);    // Attitude and Heading Reference System
     if (!ahrs.Init())
     {
-        printf("%s", "Ahrs Error!\n");
+        printf("Ahrs Error!\n");
         led.BlinkForever(); // Do not proceed.
     }
     Wait("Turn the heading to the north for fast sensor fusion convergence.", 3);
-    ahrs.Converge(freq);    // Keep it steady.
+    ahrs.Converge();        // Keep it steady.
     led.Blink(5, 100, 100); // Indicates convergence.
     led.TurnOn();
 
@@ -48,7 +49,7 @@ extern "C" void app_main(void)
     Baro baro(&i2c);
     if (!baro.Init()) // Pressure refresh rate: (freq / 2). Max 50Hz when the main loop freq is 100Hz and above.
     {
-        printf("%s", "Baro Error!\n");
+        printf("Baro Error!\n");
         led.BlinkForever(); // Do not proceed.
     }
 
@@ -93,29 +94,37 @@ extern "C" void app_main(void)
     led.Blink(3, 150, 75);                          // Indicates entering loop.
     sbus.Flush();                                   // Clear sbus buffer.
     sbus.WaitForData(2);                            // Wait for first sbus data.
+    ahrs.Update(0.0f);                              // Warmup ahrs.
+    baro.Update(0.0f);                              // Warmup baro.
     frsky.Flush();                                  // Clear telemetry buffer.
     int iFrsky = 0;                                 // Telemetry counter.
-    BaseType_t xWasDelayed;                         // Deadline missed or not
-    int64_t iMissedDeadline = 0;                    // Missed deadline counter.
+    uint8_t iMissedDeadline = 0;                    // Missed deadline flag.
     float dt = 0;                                   // Time step
     int64_t prevTime = 0;                           // Previous time [us]
     int64_t elapsedTime = 0;                        // Elapsed time [us]
     int64_t currentTime = esp_timer_get_time();     // Current time [us]
-    const int loopTime = 1000 / freq;               // Loop time [ms]
-    TickType_t xLastWakeTime = xTaskGetTickCount(); // Last wake time
+    const int64_t loopPeriodUs = 1000000 / freq;    // Loop period [us]
+    int64_t nextWakeTime = esp_timer_get_time();    // [us]
     while (true)
     {
-        xWasDelayed = xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(loopTime)); // Wait for the next cycle.
+        nextWakeTime += loopPeriodUs;
+        int64_t now = esp_timer_get_time();
+        int64_t delayUs = nextWakeTime - now;
+        if (delayUs > 0)
+        {
+            ets_delay_us(delayUs); // Busy-wait for sub-ms precision
+        }
+        else
+        {
+            printf("Deadline missed by %lld us!\n", -delayUs);
+            iMissedDeadline = 1;
+            nextWakeTime = now; // Reset to avoid drift
+        }
+
         prevTime = currentTime;
         currentTime = esp_timer_get_time();   // [us]
         elapsedTime = currentTime - prevTime; // [us]
         dt = elapsedTime / 1000000.0f;        // [s]
-        // printf("%d\n", (uint16_t)(elapsedTime));
-        if (xWasDelayed == pdFALSE)
-        {
-            printf("%s", "Deadline missed!\n");
-            iMissedDeadline += 1;
-        }
 
         ahrs.Update(dt);
         // ahrs.PrintAccRaw();
@@ -128,7 +137,7 @@ extern "C" void app_main(void)
         // ahrs.PrintQuaternions();
         // ahrs.PrintEulerAngles();
 
-        // baro.Update(dt);
+        baro.Update(dt);
         // baro.PrintAlt();
 
         if (sbus.Read())
@@ -146,7 +155,7 @@ extern "C" void app_main(void)
 
         // Telemetry
         iFrsky += 1;
-        if (iFrsky > freq) // Every 1 second.
+        if (iFrsky >= freq) // Every 1 second.
         {
             iFrsky = 0;
             int v = battery.GetVoltage(); // [mV]
@@ -158,7 +167,7 @@ extern "C" void app_main(void)
         frsky.Operate();
 
         // Loop Led
-        led.BlinkLoop(100, iMissedDeadline < 5 ? 2000 : 500);
+        led.BlinkLoop(100, iMissedDeadline == 0 ? 2000 : 500);
 
         // int64_t workTime = esp_timer_get_time(); // [us]
         // printf("w: %d\n", (uint16_t)(workTime - currentTime));

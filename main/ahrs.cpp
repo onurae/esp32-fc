@@ -202,11 +202,11 @@ bool Ahrs::ReadMag()
 void Ahrs::CalibrateAccGyro()
 {
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, 9)); // 100Hz. SAMPLE_RATE = Internal_Sample_Rate / (1 + SMPLRT_DIV)
-    printf("%s", "\nAccelerometer and gyroscope calibration\n");
-    printf("%s", "The sensor should be on flat surface! This takes 10 seconds.\n");
+    printf("\nAccelerometer and gyroscope calibration\n");
+    printf("The sensor should be on flat surface! This takes 10 seconds.\n");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     PrintCountDown("Beginning in", 3);
-    printf("%s", "Do not move the sensor!\n");
+    printf("Do not move the sensor!\n");
     float bias[6] = {};
     uint16_t cycle = 0;
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -234,7 +234,7 @@ void Ahrs::CalibrateAccGyro()
     gxb = bias[3];
     gyb = bias[4];
     gzb = bias[5];
-    printf("%s", "\nCalibration completed.\n");
+    printf("\nCalibration completed.\n");
     PrintAccGyroBias();
 
     ESP_ERROR_CHECK(i2c->Write(&mpuHandle, 0x19, srd)); // Set srd.
@@ -242,11 +242,11 @@ void Ahrs::CalibrateAccGyro()
 
 void Ahrs::CalibrateMag()
 {
-    printf("%s", "\nMagnetometer calibration\n");
-    printf("%s", "Rotate the sensor about all axes until complete! This takes 30 seconds.\n");
+    printf("\nMagnetometer calibration\n");
+    printf("Rotate the sensor about all axes until complete! This takes 30 seconds.\n");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     PrintCountDown("Beginning in", 3);
-    printf("%s", "Start rotating!\n");
+    printf("Start rotating!\n");
     ReadMag();
     float mMax[3] = {mxr, myr, mzr};
     float mMin[3] = {mxr, myr, mzr};
@@ -284,7 +284,7 @@ void Ahrs::CalibrateMag()
     mxs = av / mix;
     mys = av / miy;
     mzs = av / miz;
-    printf("%s", "\nCalibration completed.\n");
+    printf("\nCalibration completed.\n");
     PrintMagBiasScale();
 }
 
@@ -308,57 +308,57 @@ void Ahrs::PrintMagForMotionCal(bool cal)
 
 void Ahrs::PrintAccRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "axr: ", axr, "ayr: ", ayr, "azr: ", azr);
+    printf("axr: %.2f, ayr: %.2f, azr: %.2f\n", axr, ayr, azr);
 }
 
 void Ahrs::PrintGyroRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "gxr: ", gxr, "gyr: ", gyr, "gzr: ", gzr);
+    printf("gxr: %.2f, gyr: %.2f, gzr: %.2f\n", gxr, gyr, gzr);
 }
 
 void Ahrs::PrintMagRaw()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "mxr: ", mxr, "myr: ", myr, "mzr: ", mzr);
+    printf("mxr: %.2f, myr: %.2f, mzr: %.2f\n", mxr, myr, mzr);
 }
 
 void Ahrs::PrintTemp()
 {
-    printf("%s%.2f\n", "tpr: ", tpr);
+    printf("tpr: %.2f\n", tpr);
 }
 
 void Ahrs::PrintAccCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "axc: ", axc, "ayc: ", ayc, "azc: ", azc);
+    printf("axc: %.2f, ayc: %.2f, azc: %.2f\n", axc, ayc, azc);
 }
 
 void Ahrs::PrintGyroCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "gxc: ", gxc, "gyc: ", gyc, "gzc: ", gzc);
+    printf("gxc: %.2f, gyc: %.2f, gzc: %.2f\n", gxc, gyc, gzc);
 }
 
 void Ahrs::PrintMagCalibrated()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f\n", "mxc: ", mxc, "myc: ", myc, "mzc: ", mzc);
+    printf("mxc: %.2f, myc: %.2f, mzc: %.2f\n", mxc, myc, mzc);
 }
 
 void Ahrs::PrintAccGyroBias()
 {
-    printf("%s", "Enter these values to the Ahrs.hpp file and comment out the CalibrateAccGyro function.\n");
-    printf("%s%f\n", "biasAx = ", axb);
-    printf("%s%f\n", "biasAy = ", ayb);
-    printf("%s%f\n", "biasAz = ", azb);
-    printf("%s%f\n", "biasGx = ", gxb);
-    printf("%s%f\n", "biasGy = ", gyb);
-    printf("%s%f\n", "biasGz = ", gzb);
+    printf("Enter these values to the Ahrs.hpp file and comment out the CalibrateAccGyro function.\n");
+    printf("biasAx = %f\n", axb);
+    printf("biasAy = %f\n", ayb);
+    printf("biasAz = %f\n", azb);
+    printf("biasGx = %f\n", gxb);
+    printf("biasGy = %f\n", gyb);
+    printf("biasGz = %f\n", gzb);
     WaitForever();
 }
 
 void Ahrs::PrintMagBiasScale()
 {
-    printf("%s", "Enter these values to the Ahrs.hpp file and comment out the CalibrateMag function.\n");
-    printf("%s", "Hard iron: \n");
+    printf("Enter these values to the Ahrs.hpp file and comment out the CalibrateMag function.\n");
+    printf("Hard iron: \n");
     printf("Bias = x: %f y: %f z: %f\n", mxb, myb, mzb);
-    printf("%s", "Soft iron: \n");
+    printf("Soft iron: \n");
     printf("Scale = x: %f y: %f z: %f\n", mxs, mys, mzs);
     WaitForever();
 }
@@ -566,15 +566,15 @@ void Ahrs::CalculateEulerAngles()
 
 void Ahrs::PrintQuaternions()
 {
-    printf("%s%.2f, %s%.2f, %s%.2f, %s%.2f\n", "q0: ", q0, "q1: ", q1, "q2: ", q2, "q3: ", q3);
+    printf("q0: %.2f, q1: %.2f, q2: %.2f, q3: %.2f\n", q0, q1, q2, q3);
 }
 
 void Ahrs::PrintEulerAngles()
 {
-    printf("%s%.1f, %s%.1f, %s%.1f\n", "phi: ", RadToDeg(phi), "theta: ", RadToDeg(theta), "psi: ", RadToDeg(psi));
+    printf("phi: %.1f, theta: %.1f, psi: %.1f\n", RadToDeg(phi), RadToDeg(theta), RadToDeg(psi));
 }
 
-void Ahrs::Converge(uint16_t freq)
+void Ahrs::Converge()
 {
     bool isConverged = false;
     float deltaPhi = 0;
@@ -585,12 +585,14 @@ void Ahrs::Converge(uint16_t freq)
     float prevPsi = 0;
     int64_t i = 0;
 
+    const uint16_t freq = 500;                      // Frequency [Hz]
     BaseType_t xWasDelayed;                         // Deadline missed or not
     float dt = 0;                                   // Time step
     int64_t prevTime = 0;                           // Previous time [us]
     int64_t elapsedTime = 0;                        // Elapsed time [us]
     int64_t currentTime = esp_timer_get_time();     // Current time [us]
     const int loopTime = 1000 / freq;               // Loop time [ms]
+    Update(0);                                      // Warmup
     TickType_t xLastWakeTime = xTaskGetTickCount(); // Last wake time
     while (isConverged == false)
     {
@@ -603,7 +605,7 @@ void Ahrs::Converge(uint16_t freq)
         PrintEulerAngles();
         if (xWasDelayed == pdFALSE)
         {
-            printf("%s", "Deadline missed!\n");
+            printf("Deadline missed!\n");
         }
         // Calculate delta values for every 2 sec.
         if (i > freq * 2)

@@ -66,11 +66,12 @@ bool Frsky::Operate()
             case 0xA1: // ID2
                 break;
             case 0x22: // ID3 - FAS40S
-                if (i[2] % 2 == 0)
+                if (i[2] == 0)
                     SendData(dataID_CURR, current * 10); // Ex: 10.5A
-                if (i[2] % 2 == 1)
+                if (i[2] == 1)
                     SendData(dataID_VFAS, voltage * 100); // Ex: 10.55V
                 i[2]++;
+                if (i[2] >= 2) { i[2] = 0; }
                 return true;
                 break;
             case 0x83: // ID4

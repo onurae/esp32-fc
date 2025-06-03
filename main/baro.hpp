@@ -58,6 +58,7 @@ public:
     bool Init();
     void Update(float dt);
     float GetFilteredAlt() { return altf; }
+    float GetRawAlt() { return alt; }
     void PrintPresTemp();
     void PrintAlt();
 };
