@@ -105,5 +105,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp"
-    }
+    },
+    "idf.espIdfPathWin": "C:\\Users\\Onur\\esp\\v5.4.1\\esp-idf",
+    "idf.toolsPathWin": "C:\\Users\\Onur\\.espressif",
+    "idf.pythonInstallPath": "C:\\Users\\Onur\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
 }

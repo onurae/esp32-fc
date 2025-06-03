@@ -91,10 +91,10 @@ extern "C" void app_main(void)
 
     PrintCountDown("Entering loop in", 3);          // Entering loop counter.
     led.Blink(3, 150, 75);                          // Indicates entering loop.
-    int iFrsky = 0;                                 // Telemetry counter.
-    frsky.Flush();                                  // Clear telemetry buffer.
     sbus.Flush();                                   // Clear sbus buffer.
     sbus.WaitForData(2);                            // Wait for first sbus data.
+    frsky.Flush();                                  // Clear telemetry buffer.
+    int iFrsky = 0;                                 // Telemetry counter.
     BaseType_t xWasDelayed;                         // Deadline missed or not
     int64_t iMissedDeadline = 0;                    // Missed deadline counter.
     float dt = 0;                                   // Time step

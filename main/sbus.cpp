@@ -31,6 +31,7 @@ void Sbus::Init()
     ESP_ERROR_CHECK(uart_flush(uartPort));
 
     printf("SBUS initialization...\n");
+    uart_flush_input(uartPort);                    // Flush input buffer.
     uint8_t period = 7;                            // [ms]
     vTaskDelay((period * 2) / portTICK_PERIOD_MS); // Wait.
     WaitForData(1000);                             // [ms]

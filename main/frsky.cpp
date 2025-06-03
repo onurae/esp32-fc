@@ -31,6 +31,7 @@ void Frsky::Init()
     ESP_ERROR_CHECK(uart_flush(uartPort));
 
     printf("FrSKY telemetry initialization...\n");
+    uart_flush_input(uartPort);
     uint8_t period = 11; // [ms]
     while (!Operate())
     {
@@ -55,7 +56,7 @@ bool Frsky::Operate()
             uart_flush_input(uartPort);
             return false;
         }
-        const int rxBytes = uart_read_bytes(uartPort, buf, length, 100 / portTICK_PERIOD_MS);
+        const int rxBytes = uart_read_bytes(uartPort, buf, length, 0);
         if (rxBytes == 2 && buf[0] == header)
         {
             switch (buf[1])
