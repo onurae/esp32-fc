@@ -62,6 +62,11 @@ bool Frsky::Operate()
             switch (buf[1])
             {
             case 0x00: // ID1
+                if (i[0] == 0)
+                    SendData(dataID_ALT, altitude * 100); // Ex: 123.45m
+                i[0]++;
+                if (i[0] >= 1) { i[0] = 0; }
+                return true;
                 break;
             case 0xA1: // ID2
                 break;

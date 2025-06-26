@@ -162,6 +162,8 @@ extern "C" void app_main(void)
             if (v >= 0 && v < 15000)      // 3S lipo
             {
                 frsky.SetVoltage(v / 1000.0f);
+                frsky.SetCurrent(0.0f);
+                frsky.SetAltitude(baro.GetFilteredAlt());
             }
         }
         frsky.Operate();
