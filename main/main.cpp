@@ -37,7 +37,7 @@ extern "C" void app_main(void)
         printf("Ahrs Error!\n");
         led.BlinkForever(); // Do not proceed.
     }
-    Wait("Turn the heading to the north for fast sensor fusion convergence.", 3);
+    Wait("Sensor fusion convergence.", 3);
     ahrs.Converge();        // Keep it steady.
     led.Blink(5, 100, 100); // Indicates convergence.
     led.TurnOn();
