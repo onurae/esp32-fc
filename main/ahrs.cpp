@@ -585,6 +585,14 @@ void Ahrs::Converge()
     float prevPsi = 0;
     int64_t i = 0;
 
+    // A good starting point. Assume pitch and roll angles are zero.
+    CalculateCalibratedMag();
+    const float yawHalf = atan2(mxc, myc) / 2.0f;
+    q0 = cos(yawHalf);
+    q1 = 0.0f;
+    q2 = 0.0f;
+    q3 = sin(yawHalf);
+
     const uint16_t freq = 500;                      // Frequency [Hz]
     BaseType_t xWasDelayed;                         // Deadline missed or not
     float dt = 0;                                   // Time step
